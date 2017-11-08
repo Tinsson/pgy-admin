@@ -1,5 +1,5 @@
 <template>
-  <div id="black-list">
+  <div id="auto-post">
     <h1 class="list-title">
       <span class="tit-text">{{ title }}</span>
       <Button class="tit-btn"
@@ -25,17 +25,11 @@
             <FormItem label="用户名：">
               <Input v-model="ScreenData.name" style="width: 120px"></Input>
             </FormItem>
-            <FormItem label="用户手机号：">
-              <Input v-model="ScreenData.phone" style="width: 120px"></Input>
-            </FormItem>
-            <FormItem label="还款日：">
-              <DatePicker type="datetimerange"
-                          placeholder="选择日期和时间"
-                          format="yyyy-MM-dd HH:mm:ss"
-                          placement="bottom-end"
-                          :value="allTime"
-                          @on-change="PickDate"
-                          style="width: 280px"></DatePicker>
+            <FormItem label="类型：">
+              <Select v-model="ScreenData.status" style="width: 160px">
+                <Option label="1">短信</Option>
+                <Option label="2">APP</Option>
+              </Select>
             </FormItem>
           </Form>
         </div>
@@ -49,11 +43,13 @@
             数据列表
           </h3>
           <div class="btn-box">
-            <Button type="primary" size="large" icon="archive" @click="ExportData">导出数据</Button>
+            <Button type="info" size="large" icon="chatbox">添加短信规则</Button>
+            <Button type="primary" size="large" icon="archive">添加APP规则</Button>
           </div>
         </div>
         <Table :columns="UserCol"
                :data="UserData"
+               :row-class-name="TagClassName"
                :loading="loading"
                @on-selection-change="SelectTable"></Table>
         <div class="page-box">
@@ -66,22 +62,6 @@
         </div>
       </Card>
     </div>
-    <Modal
-      v-model="EditModal"
-      title="编辑账号"
-      @on-ok="EditOver">
-      <Form :model="EditInfo" label-position="right" :label-width="60">
-        <FormItem label="用户名">
-          <Input v-model="EditInfo.name"></Input>
-        </FormItem>
-        <FormItem label="手机号">
-          <Input v-model="EditInfo.phone"></Input>
-        </FormItem>
-        <FormItem label="身份证号">
-          <Input v-model="EditInfo.idcard"></Input>
-        </FormItem>
-      </Form>
-    </Modal>
   </div>
 </template>
 
@@ -90,15 +70,10 @@
   import GroupSms from '@/components/groupModal/GroupSms'
 
   export default {
-    name: 'BlackList',
-    components:{
-      GroupSms
-    },
+    name: 'AutoPost',
     data () {
       return {
-        title: '黑名单列表',
-        BlackType: ['第三方认定黑名单','手动设定黑名单'],
-        apiUrl: 'Postloan/blackList',
+        title: '自动推送',
         auth_id: '',
         loading: true,
         Remark: {
@@ -106,13 +81,10 @@
           loan_id: '',
           remark: ''
         },
-        allTime: [],
         //基础筛选数据
         ScreenData: {
           name: '',
-          phone: '',
-          start_time: '',
-          end_time: ''
+          status: ''
         },
         UserCol: [
           {
@@ -125,7 +97,7 @@
             align: 'center',
             key: 'id'
           },{
-            title: '用户姓名',
+            title: '名称',
             width: '100',
             align: 'center',
             key: 'name'
@@ -135,14 +107,17 @@
             align: 'center',
             key: 'phone'
           },{
-            title: '身份证号',
-            key: 'idcard'
+            title: '金额',
+            key: 'amount'
           },{
-            title: '黑名单类型',
-            key: 'black'
+            title: '逾期天数',
+            key: 'overdue_day'
           },{
-            title: '时间',
-            key: 'create_at'
+            title: '备注',
+            key: 'remark'
+          },{
+            title: '类型',
+            key: 'type'
           },{
             title: '操作',
             key: 'operation',
@@ -154,22 +129,9 @@
           }
         ],
         UserData: [],     //表格数据
-        BtnData: [],
         RowUserData: [],  //获取的原始数据
         //群选打钩后操作
         SelectData: [],
-        EditModal: false,
-        //编辑数据
-        EditInfo:{
-          uid: '',
-          name: '',
-          phone: '',
-          idcard: ''
-        },
-        Group: {
-          SmsModal: false,
-          AppmsgModal: false
-        },
         //初始分页信息
         Page: {
           count: 0,
@@ -180,46 +142,26 @@
     },
     created(){
       this.auth_id = getLocal('auth_id');
-      this.InitData(this.apiUrl);
+      this.InitData('Collection/overdueList');
     },
     methods: {
       //循环渲染按钮
       RenderBtn(h,params,bdata){
         let res = [];
         bdata.forEach((val)=>{
-          let btn = '';
-          if(val.class === 'DetailsOpt'){
-            let innerbtn = h('Button',{
-              props: {
-                type: val.color
-              },
-              style: {
-                marginRight: '5px'
+          const btn = h('Button',{
+            props: {
+              type: val.color
+            },
+            style: {
+              marginRight: '5px'
+            },
+            on: {
+              click: ()=>{
+                this[val.class](params.row)
               }
-            },val.name);
-            btn = h('router-link',{
-              props: {
-                to: '/consumerDetails?id=' + params.row.id
-              },
-              attrs: {
-                target: '_blank'
-              }
-            },[innerbtn]);
-          }else{
-            btn = h('Button',{
-              props: {
-                type: val.color
-              },
-              style: {
-                marginRight: '5px'
-              },
-              on: {
-                click: ()=>{
-                  this[val.class](params.row)
-                }
-              },
-            },val.name);
-          }
+            },
+          },val.name);
           res.push(btn);
         });
         return res;
@@ -245,23 +187,12 @@
         }
         this.SelectData = idarr;
       },
-      //选择时间
-      PickDate(time){
-        this.allTime = time;
-      },
       //查询结果
       SimpleSearch(sign = 1){
         let sinfo = this.RemoveObserve(this.ScreenData);
-        if(this.allTime[0] !== ""){
-          sinfo.start_time = this.allTime[0];
-          sinfo.end_time = this.allTime[1];
-        }else{
-          sinfo.start_time = '';
-          sinfo.end_time = '';
-        }
-        this.InitData(this.apiUrl,sinfo).then(()=>{
+        this.InitData('Collection/collectionListInfo',sinfo).then(()=>{
           if(sign){
-            this.$Message.success('筛选成功！')
+            this.$Message.success('筛选成功！');
           }
         });
       },
@@ -270,7 +201,7 @@
         const that = this;
         this.loading = true;
         //获取按钮信息
-        this.$fetch("Menuauth/listAuthGet",{auth_id: this.auth_id}).then((d)=>{
+        this.$fetch('Collection/overdueList',{auth_id: this.auth_id}).then((d)=>{
           this.BtnData = d.data.operation;
         });
         //列表数据获取
@@ -278,21 +209,66 @@
           this.$post(url,params).then((d)=>{
             let res = d.data.list;
             this.Page.count = d.data.count;
-            this.UserData = res;
-            this.UserData.forEach(val=>{
-              val.black = this.BlackType[val.black - 1];
-            })
             this.RowUserData = res;
+            this.UserData = this.TransText(res,'error_msg','无');
             that.loading = false;
             resolve();
           })
         })
       },
+      /**
+       * 转换空字符串
+       */
+      TransText(data,key,val1){
+        data.forEach((val)=>{
+          val[key] = (val[key] === '')?val1:val[key];
+        });
+        return data;
+      },
       //刷新列表
       RefreshList(){
-        this.InitData(this.apiUrl).then(()=>{
+        this.InitData('Collection/CollectionList').then(()=>{
           this.$Message.success('刷新成功');
         });
+      },
+      //标记记录
+      TagClassName(row){
+        if(row.marking){
+          return 'table-tag-row';
+        }else{
+          return '';
+        }
+      },
+      //备注按钮
+      RemarkOpt(row){
+        this.Remark.loan_id = row.loan_id;
+        this.Remark.remark = row.remark;
+        this.Remark.modal = true;
+      },
+      //提交备注
+      SubRemark(){
+        this.UploadData('Collection/remark',this.Remark).then(()=>{
+          this.SimpleSearch(0);
+        });
+      },
+      //展期功能
+      DelayOpt(row){
+        let tips = row.allow_delay?'是否关闭展期？':'是否开通展期？';
+        this.$Modal.confirm({
+          title: '提示',
+          content: `<p class="confirm-text">${tips}</p>`,
+          onOk: ()=>{
+            this.UploadData('Collection/allowDelay',{uid: row.id}).then(()=>{
+              this.SimpleSearch(0);
+            });
+          }
+        })
+      },
+      //标记功能
+      MarkOpt(row){
+        this.UploadData('Collection/marking',{loan_id: row.loan_id}).then(()=>{
+          this.SimpleSearch(0);
+        })
       },
       //提交信息操作
       UploadData(url,info){
@@ -308,33 +284,24 @@
             this.$Message.error('服务器繁忙，请稍后再试！');
           })
         })
-      },
-      //编辑操作
-      EditOpt(row){
-        for(let key in this.EditInfo){
-            if(key === 'uid'){
-              this.EditInfo.uid = row.id;
-            }else{
-              this.EditInfo[key] = row[key];
-            }
-        }
-        this.EditModal = true;
-      },
-      //提交编辑
-      EditOver(){
-        this.UploadData('Postloan/blackUp',this.EditInfo).then(()=>{
-            this.SimpleSearch(0);
-        });
-      },
-      //移除操作
-      Delopt(row){
 
+      },
+      //群发短信
+      GroupSmsOpt(){
+        this.Group.SmsModal = true;
+      },
+      CloseSms(){
+        this.Group.SmsModal = false;
+      },
+      SmsOpt(info){
+        console.log(info);
+        this.Group.SmsModal = false;
       },
       //导出数据
       ExportData(){
         let sinfo = this.RemoveObserve(this.ScreenData);
         sinfo.expro = 1;
-        this.UploadData(this.apiUrl,sinfo).then((url)=>{
+        this.UploadData('Collection/overdueList',sinfo).then((url)=>{
           console.log(url);
           //window.location.href = url;
         });
@@ -345,7 +312,7 @@
           page: curpage,
           num: this.Page.size
         });
-        this.InitData(this.apiUrl,sinfo).then(()=>{
+        this.InitData('Collection/overdueList',sinfo).then(()=>{
           this.Page.cur = curpage;
         })
       },
@@ -355,7 +322,7 @@
           page: 1,
           num: size
         });
-        this.InitData(this.apiUrl,sinfo).then(()=>{
+        this.InitData('Collection/overdueList',sinfo).then(()=>{
           this.Page.cur = 1;
           this.Page.size = size;
         })
@@ -388,6 +355,59 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+  }
+  .card-box{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding-bottom: 20px;
+    .sim-card{
+      position: relative;
+      width: 24%;
+      padding: 15px;
+      color: #FFF;
+      overflow: hidden;
+      cursor: pointer;
+      border-radius: 5px;
+      background-color: #c3c3c3;
+      .title{
+        font-size: 16px;
+      }
+      .value{
+        padding: 5px 0;
+        font-size: 18px;
+        .num{
+          font-size: 40px;
+        }
+      }
+      .tips{
+        position: absolute;
+        transition: all 0.1s linear;
+        bottom: -20px;
+        right: 20px;
+        font-size: 14px;
+      }
+      &:hover{
+        .tips{
+          bottom: 10px;
+        }
+      }
+      .icon{
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        font-size: 60px;
+      }
+      &.cur{
+        background-color: #2db7f5;
+        &:hover{
+          .tips{
+            bottom: -20px;
+          }
+        }
+      }
+    }
   }
 
 </style>

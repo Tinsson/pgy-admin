@@ -12,13 +12,13 @@
       <Form :model="ResData" inline :label-width="100">
         <div class="ipt-area">
           <FormItem label="用户手机号：">
-            <Input v-model="ResData.info.phone" placeholder="输入手机号码"></Input>
+            <Input v-model="ResData.info.phone" placeholder="输入手机号码" style="width: 160px;"></Input>
           </FormItem>
           <FormItem label="身份证号：">
-            <Input v-model="ResData.info.idcard" placeholder="输入身份证号码"></Input>
+            <Input v-model="ResData.info.idcard" placeholder="输入身份证号码" style="width: 160px;"></Input>
           </FormItem>
           <FormItem label="会员等级：">
-            <Select v-model="ResData.info.type" placeholder="请选择会员等级" style="width:162px">
+            <Select v-model="ResData.info.type" placeholder="请选择会员等级" style="width:160px">
               <Option value="A">A</Option>
               <Option value="B">B</Option>
               <Option value="C">C</Option>
@@ -27,29 +27,68 @@
               <Option value="W">W</Option>
             </Select>
           </FormItem>
-          <FormItem label="性别：">
-            <RadioGroup v-model="ResData.info.sex">
-              <Radio label="男"></Radio>
-              <Radio label="女"></Radio>
-            </RadioGroup>
-          </FormItem>
           <FormItem label="生日：">
             <DatePicker type="date"
                         placeholder="选择日期"
                         format="yyyy/MM/dd"
                         :value="ResData.info.birth"
                         @on-change="PickDate"
-                        style="width: 162px"></DatePicker>
+                        style="width: 160px"></DatePicker>
+          </FormItem>
+          <FormItem label="性别：">
+            <RadioGroup v-model="ResData.info.sex">
+              <Radio label="男"></Radio>
+              <Radio label="女"></Radio>
+            </RadioGroup>
           </FormItem>
         </div>
         <div class="ipt-area">
           <FormItem v-for="(item, index) in ResData.lianxiren" :label="`联系人${index}：`" :key="index">
             <p>
-              <Input v-model="item.name" placeholder="请输入姓名"></Input>
+              <Input v-model="item.name" placeholder="请输入姓名" style="width: 160px;"></Input>
             </p>
             <p class="second-part">
-              <Input v-model="item.phone" placeholder="请输入手机号码"></Input>
+              <Input v-model="item.phone" placeholder="请输入手机号码" style="width: 160px;"></Input>
             </p>
+          </FormItem>
+        </div>
+        <div class="ipt-area">
+          <FormItem label="户籍地址：">
+            <Input v-model="ResData.info.address" placeholder="请输入户籍地址" style="width: 160px;"></Input>
+          </FormItem><FormItem label="芝麻分：">
+            <Input v-model="ResData.info.zmop" placeholder="请输入芝麻分" style="width: 160px;"></Input>
+          </FormItem><FormItem label="学历：">
+            <Select v-model="ResData.info.education" style="width:160px">
+              <Option :value="10">初中</Option>
+              <Option :value="20">高中</Option>
+              <Option :value="30">大专</Option>
+              <Option :value="40">本科</Option>
+              <Option :value="50">硕士</Option>
+              <Option :value="60">博士</Option>
+              <Option :value="70">博士后</Option>
+            </Select>
+          </FormItem><FormItem label="最大借款额度：">
+            <Input v-model="ResData.info.credit_limit" placeholder="请输入额度" style="width: 160px;"></Input>
+          </FormItem>
+        </div>
+        <div class="ipt-area">
+          <FormItem v-for="item in ResData.rz_info" :label="`${item.type_name}：`">
+            <Select v-model="item.pass_at" style="width:160px">
+              <Option :value="1">通过</Option>
+              <Option :value="0">未通过</Option>
+            </Select>
+          </FormItem>
+        </div>
+        <div class="ipt-area">
+          <FormItem label="审核员：">
+            <Select v-model="ResData.info.auditorId" style="width:160px">
+              <Option v-for="item in ResData.auditor" :value="item.id" :key="item.id">{{item.admin_name}}</Option>
+            </Select>
+          </FormItem>
+          <FormItem label="催收员：">
+            <Select v-model="ResData.info.collectorId" style="width:160px">
+              <Option v-for="item in ResData.collector" :value="item.id" :key="item.id">{{item.admin_name}}</Option>
+            </Select>
           </FormItem>
         </div>
         <div class="ipt-area">
@@ -74,49 +113,6 @@
             <Input v-model="DetailsLive"
                    placeholder="请输入详细地址"
                    :style="{width: AddressWidth}"></Input>
-          </FormItem>
-        </div>
-        <div class="ipt-area">
-          <FormItem label="户籍地址：">
-            <Input v-model="ResData.info.address" placeholder="请输入户籍地址"></Input>
-          </FormItem>
-          <FormItem label="芝麻分：">
-            <Input v-model="ResData.info.zmop" placeholder="请输入芝麻分"></Input>
-          </FormItem>
-          <FormItem label="学历：">
-            <Select v-model="ResData.info.education" style="width:162px">
-              <Option :value="10">初中</Option>
-              <Option :value="20">高中</Option>
-              <Option :value="30">大专</Option>
-              <Option :value="40">本科</Option>
-              <Option :value="50">硕士</Option>
-              <Option :value="60">博士</Option>
-              <Option :value="70">博士后</Option>
-            </Select>
-          </FormItem>
-          <FormItem label="最大借款额度：">
-            <Input v-model="ResData.info.credit_limit" placeholder="请输入额度"></Input>
-          </FormItem>
-        </div>
-        <div class="ipt-area">
-
-          <FormItem v-for="item in ResData.rz_info" :label="item.type_name">
-            <Select v-model="item.pass_at" style="width:162px">
-              <Option :value="1">通过</Option>
-              <Option :value="0">未通过</Option>
-            </Select>
-          </FormItem>
-        </div>
-        <div class="ipt-area">
-          <FormItem label="审核员：">
-            <Select v-model="ResData.info.auditorId" style="width:162px">
-              <Option v-for="item in ResData.auditor" :value="item.id" :key="item.id">{{item.admin_name}}</Option>
-            </Select>
-          </FormItem>
-          <FormItem label="催收员：">
-            <Select v-model="ResData.info.collectorId" style="width:162px">
-              <Option v-for="item in ResData.collector" :value="item.id" :key="item.id">{{item.admin_name}}</Option>
-            </Select>
           </FormItem>
         </div>
         <div class="btn-area">
@@ -378,7 +374,7 @@
     padding: 10px 30px;
   }
   .second-part{
-    margin-top: 10px;
+    margin-top: 20px;
   }
   .btn-area{
     padding-bottom: 10px;

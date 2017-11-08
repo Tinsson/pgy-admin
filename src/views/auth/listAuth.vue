@@ -28,6 +28,8 @@
             <Option value="RemarkOpt">备注按钮</Option>
             <Option value="DelayOpt">展期按钮</Option>
             <Option value="MarkOpt">标记按钮</Option>
+            <Option value="LoanOpt">放款按钮</Option>
+            <Option value="RejectOpt">拒绝按钮</Option>
             <Option value="ChangeStatus">禁用启用按钮</Option>
             <Option value="AssignAuth">权限分配按钮</Option>
             <Option value="AssignDep">分配部门按钮</Option>
@@ -85,6 +87,8 @@
             <Option value="RemarkOpt">备注按钮</Option>
             <Option value="DelayOpt">展期按钮</Option>
             <Option value="MarkOpt">标记按钮</Option>
+            <Option value="LoanOpt">放款按钮</Option>
+            <Option value="RejectOpt">拒绝按钮</Option>
             <Option value="ChangeStatus">禁用启用按钮</Option>
             <Option value="AssignAuth">权限分配按钮</Option>
             <Option value="AssignDep">分配部门按钮</Option>

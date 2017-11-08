@@ -46,6 +46,13 @@ import contractInfo from '@/views/loan/contract/contractInfo'
 import urgeList from '@/views/urge/urgeList'
 import badDebtList from '@/views/urge/badDebtList'
 
+//工作流平台
+import workliuList from '@/views/workliu/workliuList'
+
+//推送管理
+import autoPost from '@/views/post/autoPost'
+import templateEdit from '@/views/post/templateEdit'
+
 //整合所有的模块集合，用于添加路由
 const componentList = {
   AdminFrame,
@@ -68,7 +75,12 @@ const componentList = {
   contractList,
 
   urgeList,
-  badDebtList
+  badDebtList,
+
+  workliuList,
+
+  autoPost,
+  templateEdit
 };
 Vue.use(Router);
 
@@ -132,6 +144,7 @@ const router = new Router({
 router.beforeEach((to, from, next)=>{
   const token = getLocal('token');
   if(token){
+
     /*if(from.path === '/login'){
       store.dispatch('setView').then(()=>{
         let permission = store.getters.permission;

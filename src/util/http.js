@@ -7,8 +7,8 @@ import { getLocal } from './util'
 axios.defaults.timeout = 5000;
 /*线上的走api.xrjinrong.com，公司开发走192.168.3.93*/
 //axios.defaults.baseURL = 'http://api.xrjinrong.com/backend';
-axios.defaults.baseURL = 'http://192.168.3.93/backend';
-
+//axios.defaults.baseURL = 'http://192.168.3.93/backend';
+axios.defaults.baseURL = 'http://192.168.0.118/backend';
 
 // http request 拦截器
 axios.interceptors.request.use(

@@ -1,5 +1,5 @@
 <template>
-  <div id="black-list">
+  <div id="workliu-list">
     <h1 class="list-title">
       <span class="tit-text">{{ title }}</span>
       <Button class="tit-btn"
@@ -37,6 +37,15 @@
                           @on-change="PickDate"
                           style="width: 280px"></DatePicker>
             </FormItem>
+            <FormItem label="状态：">
+              <Select v-model="ScreenData.status" style="width:162px">
+                <Option value="TO_VALIDATE">待短验确认</Option>
+                <Option value="PAY_FAIL">支付失败</Option>
+                <Option value="FAIL">系统异常</Option>
+                <Option value="PROCESSING">处理中</Option>
+                <Option value="TIME_OUT">超时失败</Option>
+              </Select>
+            </FormItem>
           </Form>
         </div>
       </Card>
@@ -66,22 +75,6 @@
         </div>
       </Card>
     </div>
-    <Modal
-      v-model="EditModal"
-      title="编辑账号"
-      @on-ok="EditOver">
-      <Form :model="EditInfo" label-position="right" :label-width="60">
-        <FormItem label="用户名">
-          <Input v-model="EditInfo.name"></Input>
-        </FormItem>
-        <FormItem label="手机号">
-          <Input v-model="EditInfo.phone"></Input>
-        </FormItem>
-        <FormItem label="身份证号">
-          <Input v-model="EditInfo.idcard"></Input>
-        </FormItem>
-      </Form>
-    </Modal>
   </div>
 </template>
 
@@ -90,15 +83,14 @@
   import GroupSms from '@/components/groupModal/GroupSms'
 
   export default {
-    name: 'BlackList',
+    name: 'WorkLiuList',
     components:{
       GroupSms
     },
     data () {
       return {
-        title: '黑名单列表',
-        BlackType: ['第三方认定黑名单','手动设定黑名单'],
-        apiUrl: 'Postloan/blackList',
+        title: '工作流列表',
+        apiUrl: 'Workliu/workliuList',
         auth_id: '',
         loading: true,
         Remark: {
@@ -112,7 +104,8 @@
           name: '',
           phone: '',
           start_time: '',
-          end_time: ''
+          end_time: '',
+          status: ''
         },
         UserCol: [
           {
@@ -135,14 +128,14 @@
             align: 'center',
             key: 'phone'
           },{
-            title: '身份证号',
-            key: 'idcard'
+            title: '订单金额',
+            key: 'amount'
           },{
-            title: '黑名单类型',
-            key: 'black'
+            title: '申请时间',
+            key: 'request_date'
           },{
-            title: '时间',
-            key: 'create_at'
+            title: '状态',
+            key: 'order_status'
           },{
             title: '操作',
             key: 'operation',
@@ -158,14 +151,6 @@
         RowUserData: [],  //获取的原始数据
         //群选打钩后操作
         SelectData: [],
-        EditModal: false,
-        //编辑数据
-        EditInfo:{
-          uid: '',
-          name: '',
-          phone: '',
-          idcard: ''
-        },
         Group: {
           SmsModal: false,
           AppmsgModal: false
@@ -279,9 +264,6 @@
             let res = d.data.list;
             this.Page.count = d.data.count;
             this.UserData = res;
-            this.UserData.forEach(val=>{
-              val.black = this.BlackType[val.black - 1];
-            })
             this.RowUserData = res;
             that.loading = false;
             resolve();
@@ -309,26 +291,34 @@
           })
         })
       },
-      //编辑操作
-      EditOpt(row){
-        for(let key in this.EditInfo){
-            if(key === 'uid'){
-              this.EditInfo.uid = row.id;
-            }else{
-              this.EditInfo[key] = row[key];
-            }
-        }
-        this.EditModal = true;
-      },
-      //提交编辑
-      EditOver(){
-        this.UploadData('Postloan/blackUp',this.EditInfo).then(()=>{
-            this.SimpleSearch(0);
-        });
-      },
       //移除操作
       Delopt(row){
 
+      },
+      //放款操作
+      LoanOpt(row){
+        let tips = '确认放款吗？';
+        this.$Modal.confirm({
+          title: '提示',
+          content: `<p class="confirm-text">${tips}</p>`,
+          onOk: ()=>{
+            this.UploadData('Workliu/workliuLending',{reqid: row.id}).then(()=>{
+              this.SimpleSearch(0);
+            });
+          }
+        })
+      },
+      //拒绝操作
+      RejectOpt(row){
+        this.$Modal.confirm({
+          title: '提示',
+          content: `<p class="confirm-text">确认拒绝此用户吗？</p>`,
+          onOk: ()=>{
+            this.UploadData('Workliu/workliuReject',{reqid: row.id}).then(()=>{
+              this.SimpleSearch(0);
+            });
+          }
+        })
       },
       //导出数据
       ExportData(){
