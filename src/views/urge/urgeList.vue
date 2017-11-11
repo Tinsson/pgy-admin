@@ -58,7 +58,7 @@
           </h3>
           <div class="btn-box">
             <Button type="warning" size="large" icon="chatbubble" @click="GroupSmsOpt">群发短信</Button>
-            <Button type="info" size="large" icon="chatbox">群发APP消息</Button>
+            <Button type="info" size="large" icon="chatbox" @click="GroupAppOpt">群发APP消息</Button>
             <Button type="primary" size="large" icon="archive" @click="ExportData">导出数据</Button>
           </div>
         </div>
@@ -83,22 +83,29 @@
       <h2 slot="header">备注信息</h2>
       <Input v-model="Remark.remark" type="textarea" :rows="4" placeholder="请输入备注信息"></Input>
     </Modal>
-    <GroupSms title="群发短信"
-              :modalShow="Group.SmsModal"
+    <GroupSms :modalShow="Group.SmsModal"
               :InitData="SelectData"
+              :Count="Page.count"
               @CloseModal="CloseSms"
               @UpOver="SmsOpt"></GroupSms>
+    <PushApp :modalShow="Group.AppmsgModal"
+             :InitData="SelectData"
+             :Count="Page.count"
+             @CloseModal="CloseApp"
+             @UpOver="AppOpt"></PushApp>
   </div>
 </template>
 
 <script>
   import { getLocal } from '@/util/util'
   import GroupSms from '@/components/groupModal/GroupSms'
+  import PushApp from '@/components/groupModal/PushApp'
 
   export default {
     name: 'UrgeList',
     components:{
-      GroupSms
+      GroupSms,
+      PushApp
     },
     data () {
       return {
@@ -447,13 +454,29 @@
         console.log(info);
         this.Group.SmsModal = false;
       },
+      //App推送
+      GroupAppOpt(){
+        this.Group.AppmsgModal = true;
+      },
+      CloseApp(){
+        this.Group.AppmsgModal = false;
+      },
+      AppOpt(info){
+        let sinfo = this.RemoveObserve(info);
+        sinfo.regid = (sinfo.type.length > 0)?sinfo.regid.join(','):'';
+        console.log(sinfo);
+        this.UploadData('Push/pushs',sinfo).then(()=>{
+          this.Group.AppmsgModal = false;
+        });
+        //this.Group.AppmsgModal = false;
+      },
       //导出数据
       ExportData(){
         let sinfo = this.RemoveObserve(this.ScreenData);
         sinfo.expro = 1;
         this.UploadData('Collection/CollectionList',sinfo).then((url)=>{
-            console.log(url);
-            //window.location.href = url;
+            //console.log(url);
+            window.location.href = url;
         });
       },
       //改变页数

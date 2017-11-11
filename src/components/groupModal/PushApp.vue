@@ -1,8 +1,7 @@
 <template>
   <Modal
-    v-model="SmsState"
-    title="群发短信"
-    @on-ok="EditOver"
+    v-model="AppPushState"
+    title="App推送消息"
     @on-cancel="CloseBtn">
     <Form label-position="right" :label-width="120">
       <FormItem label="发送对象：">
@@ -16,19 +15,27 @@
           </p>
         </div>
       </FormItem>
-      <FormItem label="短信模板：">
-        <Select v-model="Result.type" style="width: 300px;"
-                placeholder="请选择短信模板">
-          <Option :value="1">模板一</Option>
-          <Option :value="2">模板二</Option>
-          <Option :value="3">模板三</Option>
-          <Option :value="4">模板四</Option>
+      <FormItem label="推送类型：">
+        <RadioGroup v-model="Result.type">
+          <Radio label="all">全部</Radio>
+          <Radio label="ios">苹果</Radio>
+          <Radio label="android">安卓</Radio>
+        </RadioGroup>
+      </FormItem>
+      <FormItem label="信息模板：">
+        <Select v-model="Result.tmplid" style="width: 300px;"
+                placeholder="请选择信息模板">
+          <Option v-for="item in ModeOpt" :value="item.id">{{ item.title }}</Option>
         </Select>
       </FormItem>
-      <FormItem label="发送统计">
-        发送条数：<span>{{CountNum}}</span>　可用短信条数：<span class="important-num">100000</span>条
+      <FormItem label="发送统计：">
+        发送条数：<span>{{CountNum}}</span>
       </FormItem>
     </Form>
+    <div slot="footer">
+      <Button type="ghost" @click="CloseBtn">取消</Button>
+      <Button type="primary" @click="EditOver">推送</Button>
+    </div>
   </Modal>
 </template>
 
@@ -37,12 +44,14 @@
     name: 'GroupSms',
     data () {
       return{
-        SmsState: this.modalShow,
+        AppPushState: this.modalShow,
         Result: {
-          id: this.InitData,
-          type: 1,
+          regid: this.InitData,
+          type: 'all',
+          tmplid: 0,
           all: false
-        }
+        },
+        ModeOpt: []
       }
     },
     props: {
@@ -52,11 +61,14 @@
     },
     watch: {
       modalShow(val){
-        this.SmsState = val;
+        this.AppPushState = val;
       },
       InitData(val){
-        this.Result.id = val;
+        this.Result.regid = val;
       }
+    },
+    created(){
+      this.GetModeList();
     },
     computed:{
       CountNum(){
@@ -72,6 +84,11 @@
       }
     },
     methods: {
+      GetModeList(){
+        this.$fetch('Autopush/modelList').then(d=>{
+          this.ModeOpt = d.data;
+        })
+      },
       EditOver(){
         this.$emit('UpOver',this.Result);
       },

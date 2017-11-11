@@ -13,35 +13,41 @@
     </div>
     <Modal
       v-model="AddModal"
-      title="添加账号"
-      @on-ok="AddOver">
-      <Form :model="AddInfo" label-position="right" :label-width="60">
-        <FormItem label="父级编号">
+      title="添加账号">
+      <Form ref="AddInfo" :model="AddInfo" :rules="ValidateRule" label-position="right" :label-width="80">
+        <!--<FormItem label="父级编号">
           <Input v-model="AddInfo.pid" disabled></Input>
-        </FormItem>
-        <FormItem label="部门名称">
+        </FormItem>-->
+        <FormItem label="部门名称" prop="name">
           <Input v-model="AddInfo.name"></Input>
         </FormItem>
-        <FormItem label="排序">
+        <FormItem label="排序" prop="sort">
           <Input v-model="AddInfo.sort"></Input>
         </FormItem>
       </Form>
+      <div slot="footer">
+        <Button type="text" @click="AddCancel" size="large">取消</Button>
+        <Button type="primary" @click="AddOver" size="large">添加</Button>
+      </div>
     </Modal>
     <Modal
       v-model="EditModal"
-      title="编辑部门"
-      @on-ok="EditOver">
-      <Form :model="EditInfo" label-position="right" :label-width="60">
+      title="编辑部门">
+      <Form ref="EditInfo" :model="EditInfo" label-position="right" :rules="ValidateRule" :label-width="80">
         <FormItem label="部门编号">
           <Input v-model="EditInfo.id" disabled></Input>
         </FormItem>
-        <FormItem label="部门名称">
+        <FormItem label="部门名称" prop="name">
           <Input v-model="EditInfo.name"></Input>
         </FormItem>
-        <FormItem label="排序">
+        <FormItem label="排序" prop="sort">
           <Input v-model="EditInfo.sort"></Input>
         </FormItem>
       </Form>
+      <div slot="footer">
+        <Button type="text" @click="EditCancel" size="large">取消</Button>
+        <Button type="primary" @click="EditOver" size="large">修改</Button>
+      </div>
     </Modal>
 
   </div>
@@ -98,6 +104,14 @@
         DepData: [],     //表格数据
         RowDepData: [],  //获取的原始数据
         BtnData: [],      //按钮数据
+        ValidateRule: {
+          name: [
+            {required: true,message: '部门名称不能为空！'}
+          ],
+          sort: [
+            {required: true,message: '排序数字不能为空！'}
+          ]
+        },
         EditModal: false,
         EditInfo:{
           id: '',
@@ -151,10 +165,6 @@
         })
 
       },
-      //提取子部门数据
-      GetChild(data){
-
-      },
       //刷新列表
       RefreshList(){
         this.InitData(()=>{
@@ -163,28 +173,41 @@
       },
       //提交信息操作
       UploadData(url,info){
-        this.$post(url,info).then((d)=>{
-          if(d.status === 1){
-            this.$Message.success(d.message);
-            this.InitData();
-          }else{
-            this.$Message.error(d.message);
-          }
-        }).catch((err)=>{
-          this.$Message.error('服务器繁忙，请稍后再试！');
-        })
+        return new Promise(resolve=>{
+          this.$post(url,info).then((d)=>{
+            if(d.status === 1){
+              this.$Message.success(d.message);
+              resolve();
+              this.InitData();
+            }else{
+              this.$Message.error(d.message);
+            }
+          }).catch((err)=>{
+            this.$Message.error('服务器繁忙，请稍后再试！');
+          })
+        });
       },
       //添加部门
       AddOpt(p){
+        this.$refs['AddInfo'].resetFields();
         for(let key in this.AddInfo){
           this.AddInfo[key] = '';
         }
         this.AddInfo.pid = p.pid;
         this.AddModal = true;
       },
+      AddCancel(){
+        this.AddModal = false;
+      },
       //提交添加
       AddOver(){
-        this.UploadData('Auth/deparAdd',this.AddInfo);
+        this.$refs['AddInfo'].validate(valid=>{
+          if(valid){
+            this.UploadData('Auth/deparAdd',this.AddInfo).then(()=>{
+              this.AddModal = false;
+            });
+          }
+        })
       },
       //编辑操作
       EditOpt(row){
@@ -197,9 +220,18 @@
           }
         }
       },
+      EditCancel(){
+        this.EditModal = false;
+      },
       //提交编辑
       EditOver(){
-        this.UploadData('Auth/deparUp',this.EditInfo);
+        this.$refs['EditInfo'].validate(valid=>{
+          if(valid){
+            this.UploadData('Auth/deparUp',this.EditInfo).then(()=>{
+              this.EditModal = false;
+            });
+          }
+        })
       },
       //删除部门
       Delopt(p){

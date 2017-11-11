@@ -8,12 +8,12 @@
             :accordion="true"
             width="auto">
         <div class="layout-logo-left">
-          <img class="logo" src="../assets/images/icon.png" alt="">
+          <img class="logo" src="../assets/images/logo.png" alt="">
           欣荣钱包
         </div>
         <div class="user-panel">
           <div class="pull-left">
-            <img class="avator" :src="Avator" alt="">
+            <img class="avator" src="../assets/images/avator.jpg" alt="">
           </div>
           <div class="pull-left">
             <p class="text">{{ username }}</p>
@@ -86,9 +86,7 @@
             title: '温馨提示',
             content: '<p class="confirm-text">确认退出登录吗？</p>',
             onOk: ()=>{
-              delLocal('username');
-              delLocal('token');
-              delLocal('authview');
+              window.localStorage.clear();
               saveLocal('path','/login');
               this.$router.push({path:"/"});
             }
@@ -178,8 +176,8 @@
     justify-content: center;
     .logo{
       display: inline-block;
-      width: 30px;
-      height: 30px;
+      width: 35px;
+      height: 35px;
       margin-right: 5px;
     }
   }

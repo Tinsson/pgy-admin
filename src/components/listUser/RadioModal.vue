@@ -6,7 +6,7 @@
     @on-cancel="CloseBtn">
     <Form :model="InitDep" label-position="right" :label-width="60">
       <FormItem :label="label1">
-        <Input v-model="InitDep.id"></Input>
+        <Input v-model="InitDep.id" :disabled="true"></Input>
       </FormItem>
       <FormItem :label="label2">
         <RadioGroup v-model="InitDep.depar_id">

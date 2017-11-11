@@ -7,8 +7,8 @@ import { getLocal } from './util'
 axios.defaults.timeout = 5000;
 /*线上的走api.xrjinrong.com，公司开发走192.168.3.93*/
 //axios.defaults.baseURL = 'http://api.xrjinrong.com/backend';
-//axios.defaults.baseURL = 'http://192.168.3.93/backend';
-axios.defaults.baseURL = 'http://192.168.0.118/backend';
+//axios.defaults.baseURL = 'http://192.168.0.118/backend';
+axios.defaults.baseURL = 'http://www.zz.com/backend';
 
 // http request 拦截器
 axios.interceptors.request.use(
@@ -19,7 +19,7 @@ axios.interceptors.request.use(
     config.headers.common['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
     //判断token是否存在
     if (token) {
-      //config.headers['TOKEN'] = token; //上线时要改
+      config.headers['TOKEN'] = token; //上线时要改
     }else{
       if(path === '/login'){
         router.push({path: '/login'});
@@ -37,11 +37,10 @@ axios.interceptors.request.use(
 // http response 拦截器
 axios.interceptors.response.use(
   response => {
-    if(response.data.errCode == 2) {
+    if(response.data.status === 0) {
       router.push({
-        path: '/',
-        query: {redirect: router.currentRoute.fullPath}  //从哪个页面跳转
-      })
+        path: '/notfind'
+      });
     }
     return response;
   },

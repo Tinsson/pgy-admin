@@ -6,6 +6,7 @@ import store from '@/store'
 //通用模块
 import AdminFrame from '@/components/AdminFrame'
 import NoContent from '@/components/NoContent'
+import NotFind from '@/components/NotFind'
 
 //登录模块
 import Login from '@/views/login/Login'
@@ -133,6 +134,10 @@ const routes = [
     path: '/contractInfo',
     name: '合同详细信息',
     component: contractInfo
+  },{
+    path: '/notfind',
+    name: '页面不存在',
+    component: NotFind
   }
 ]
 
@@ -145,13 +150,17 @@ router.beforeEach((to, from, next)=>{
   const token = getLocal('token');
   if(token){
 
-    /*if(from.path === '/login'){
-      store.dispatch('setView').then(()=>{
-        let permission = store.getters.permission;
-      });
-    }else{
-      next();
-    }*/
+    /*let pathArr = [];
+    let authview = JSON.parse(getLocal('authview'));
+    authview.forEach(val=>{
+      if(val.children.length > 0){
+        val.children.forEach(vval=>{
+
+        })
+      }else{
+        pathArr.push(val.path);
+      }
+    })*/
 
     store.dispatch('setView').then(()=>{
       let permission = JSON.stringify(store.getters.permission);

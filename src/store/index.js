@@ -6,7 +6,7 @@ import actions from './action'
 Vue.use(Vuex);
 
 const state = {
-  username: '123',
+  username: '',
   currentpath: '',
   authView: [],
   firstview: ''

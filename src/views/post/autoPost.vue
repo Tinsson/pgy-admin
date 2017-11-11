@@ -22,13 +22,13 @@
         </div>
         <div class="opt-box">
           <Form :model="ScreenData" inline :label-width="85">
-            <FormItem label="用户名：">
+            <FormItem label="名称：">
               <Input v-model="ScreenData.name" style="width: 120px"></Input>
             </FormItem>
             <FormItem label="类型：">
               <Select v-model="ScreenData.status" style="width: 160px">
-                <Option label="1">短信</Option>
-                <Option label="2">APP</Option>
+                <Option value="1">短信</Option>
+                <Option value="2">APP</Option>
               </Select>
             </FormItem>
           </Form>
@@ -43,48 +43,145 @@
             数据列表
           </h3>
           <div class="btn-box">
-            <Button type="info" size="large" icon="chatbox">添加短信规则</Button>
-            <Button type="primary" size="large" icon="archive">添加APP规则</Button>
+            <Button type="warning" size="large" icon="chatbox" @click="AddRulesModal">添加规则</Button>
           </div>
         </div>
         <Table :columns="UserCol"
                :data="UserData"
-               :row-class-name="TagClassName"
                :loading="loading"
                @on-selection-change="SelectTable"></Table>
-        <div class="page-box">
-          <Page :current="Page.cur"
-                :page-size="Page.size"
-                :total="Page.count"
-                placement="top"
-                @on-change="ChangePage"
-                @on-page-size-change="ChangeSize" show-sizer></Page>
-        </div>
       </Card>
     </div>
+    <Modal
+      v-model="RulesModal.modal"
+      title="添加规则"
+      @on-ok="AddOver">
+      <Form :model="RulesModal.data" label-position="right" :label-width="80" class="auto-height">
+        <FormItem label="启用状态：">
+          <RadioGroup v-model="RulesModal.data.disable">
+            <Radio :label="0">已禁用</Radio>
+            <Radio :label="1">已启用</Radio>
+          </RadioGroup>
+        </FormItem>
+        <FormItem label="推送：">
+          <RadioGroup v-model="RulesModal.data.sms_type">
+            <Radio :label="0">app推送</Radio>
+            <Radio :label="1">短信推送</Radio>
+          </RadioGroup>
+        </FormItem>
+        <FormItem label="类型：">
+          <Select v-model="RulesModal.data.type" class="info-width">
+            <Option :value="0">获客类</Option>
+            <Option :value="1">认证类</Option>
+            <Option :value="2">交易类</Option>
+            <Option :value="3">催收提醒类</Option>
+          </Select>
+        </FormItem>
+        <FormItem label="行为：" v-show="BehaviorData.show">
+          <Select v-model="RulesModal.data.behavior" class="info-width">
+            <Option v-for="(opt, index) in BehaviorArr" :value="index" :key="opt">{{opt}}</Option>
+          </Select>
+        </FormItem>
+        <FormItem label="状态：">
+          <Select v-model="RulesModal.data.status" class="info-width">
+            <Option v-for="(opt, index) in StatusArr" :value="index" :key="opt">{{opt}}</Option>
+          </Select>
+        </FormItem>
+        <FormItem label="时间约束：">
+          <RadioGroup v-model="RulesModal.data.period">
+            <Radio v-for="(opt, index) in TriggerArr" :label="index" :key="opt">{{opt}}</Radio>
+          </RadioGroup>
+        </FormItem>
+        <FormItem label="时长：">
+          <Row>
+            <Col span="3">
+              <Input :number="true" v-model="RulesModal.data.trigger_date"></Input>
+            </Col>
+            <Col span="2" class="col-center">分钟</Col>
+            <!--<Col span="3" v-show="IsUrge">
+              <Input :number="true" v-model="RulesModal.data.hour"></Input>
+            </Col>
+            <Col span="2" class="col-center" v-show="IsUrge">时</Col>
+            <Col span="3" v-show="IsUrge">
+            <Input :number="true" v-model="RulesModal.data.min"></Input>
+            </Col>
+            <Col span="2" class="col-center" v-show="IsUrge">分</Col>
+            <Col span="3" v-show="IsUrge">
+            <Input :number="true" v-model="RulesModal.data.sec"></Input>
+            </Col>
+            <Col span="2" class="col-center" v-show="IsUrge">秒</Col>-->
+          </Row>
+        </FormItem>
+        <FormItem label="名称：">
+          <Input v-model="RulesModal.data.title"></Input>
+        </FormItem>
+        <FormItem label="内容：">
+          <Input v-model="RulesModal.data.content" type="textarea" :autosize="{minRows: 3,maxRows: 5}"></Input>
+        </FormItem>
+      </Form>
+    </Modal>
   </div>
 </template>
 
 <script>
   import { getLocal } from '@/util/util'
-  import GroupSms from '@/components/groupModal/GroupSms'
 
   export default {
     name: 'AutoPost',
     data () {
       return {
         title: '自动推送',
+        apiUrl: 'Autopush/autoPushList',
         auth_id: '',
         loading: true,
-        Remark: {
-          modal: false,
-          loan_id: '',
-          remark: ''
+        TextArr:{
+          trigger: ['立即触发','多少小时触发','多少天触发'],
+          display: ['禁用','启用'],
+          status: ['失败','成功','未逾期','已逾期'],
+          type: ['获客类','认证类','交易类','催收提醒类'],
+          sms_type: ['app推送','短信推送']
+        },
+        //行为选择
+        BehaviorData:{
+          show: true,
+          type: [
+            ['注册'],
+            ['活体识别','基本资料认证','银行卡绑定','运营商认证','芝麻分认证','淘宝认证','微信客服认证'],
+            ['借款','还款','续借','展期'],
+            []
+          ],
+        },
+        StatusData:[
+          ['成功','失败'],
+          ['成功','失败'],
+          ['成功','失败'],
+          ['未逾期','已逾期']
+        ],
+        TriggerData:{
+          single: ['之后触发'],
+          double: ['距离还款日','逾期超过']
         },
         //基础筛选数据
         ScreenData: {
           name: '',
           status: ''
+        },
+        //添加规则
+        RulesModal:{
+          modal: false,
+          isEdit: false,
+          id: '',
+          data: {
+            sms_type: 0,
+            type: 0,
+            behavior: 0,
+            status: 0,
+            trigger: 0,
+            trigger_date: 0,
+            disable: 1,
+            title: '',
+            content: ''
+          }
         },
         UserCol: [
           {
@@ -100,24 +197,25 @@
             title: '名称',
             width: '100',
             align: 'center',
-            key: 'name'
+            key: 'title'
           },{
-            title: '用户手机号',
-            width: '150',
-            align: 'center',
-            key: 'phone'
+            title: '状态',
+            key: 'status'
           },{
-            title: '金额',
-            key: 'amount'
+            title: '行为',
+            key: 'behavior'
           },{
-            title: '逾期天数',
-            key: 'overdue_day'
-          },{
-            title: '备注',
-            key: 'remark'
-          },{
-            title: '类型',
+            title: '推送类型',
             key: 'type'
+          },{
+            title: '推送方式',
+            key: 'sms_type'
+          },{
+            title: '触发状态',
+            key: 'trigger'
+          },{
+            title: '触发时间(分)',
+            key: 'trigger_date'
           },{
             title: '操作',
             key: 'operation',
@@ -130,38 +228,79 @@
         ],
         UserData: [],     //表格数据
         RowUserData: [],  //获取的原始数据
+        BtnData: [],
         //群选打钩后操作
-        SelectData: [],
-        //初始分页信息
-        Page: {
-          count: 0,
-          cur: 1,
-          size: 20,
-        }
+        SelectData: []
       }
     },
     created(){
       this.auth_id = getLocal('auth_id');
-      this.InitData('Collection/overdueList');
+      this.InitData(this.apiUrl);
+    },
+    computed: {
+      BehaviorArr(){
+        this.BehaviorData.show = (this.RulesModal.data.type === 3)?false:true;
+        return this.BehaviorData.type[this.RulesModal.data.type];
+      },
+      StatusArr(){
+        return this.StatusData[this.RulesModal.data.type];
+      },
+      TriggerArr(){
+        if(this.RulesModal.data.type === 3){
+          return this.TriggerData.double;
+        }else{
+          return this.TriggerData.single;
+        }
+      },
+      IsUrge(){
+        const type = this.RulesModal.data.type;
+        if(type === 3){
+          this.RulesModal.data.day = 0;
+          this.RulesModal.data.hour = 0;
+          this.RulesModal.data.min = 0;
+          this.RulesModal.data.sec = 0;
+        }
+        return (type === 3)?false:true;
+      }
     },
     methods: {
       //循环渲染按钮
       RenderBtn(h,params,bdata){
         let res = [];
         bdata.forEach((val)=>{
-          const btn = h('Button',{
-            props: {
-              type: val.color
-            },
-            style: {
-              marginRight: '5px'
-            },
-            on: {
-              click: ()=>{
-                this[val.class](params.row)
-              }
-            },
-          },val.name);
+          let btn = '';
+          if(val.class === 'ChangeStatus'){
+            const color = params.row.disable?'warning':val.color;
+            const name = params.row.disable?'禁用': val.name;
+            btn = h('Button',{
+              props: {
+                type: color
+              },
+              style: {
+                marginRight: '5px'
+              },
+              on: {
+                click: ()=>{
+                  this[val.class](params.row)
+                }
+              },
+            },name);
+          }else{
+            btn = h('Button',{
+              props: {
+                type: val.color
+              },
+              style: {
+                marginRight: '5px'
+              },
+              on: {
+                click: ()=>{
+                  this[val.class](params.row)
+                }
+              },
+            },val.name);
+          }
+
           res.push(btn);
         });
         return res;
@@ -190,7 +329,7 @@
       //查询结果
       SimpleSearch(sign = 1){
         let sinfo = this.RemoveObserve(this.ScreenData);
-        this.InitData('Collection/collectionListInfo',sinfo).then(()=>{
+        this.InitData(this.apiUrl,sinfo).then(()=>{
           if(sign){
             this.$Message.success('筛选成功！');
           }
@@ -201,74 +340,34 @@
         const that = this;
         this.loading = true;
         //获取按钮信息
-        this.$fetch('Collection/overdueList',{auth_id: this.auth_id}).then((d)=>{
+        this.$fetch('Menuauth/listAuthGet',{auth_id: this.auth_id}).then((d)=>{
           this.BtnData = d.data.operation;
         });
         //列表数据获取
         return new Promise((resolve)=>{
           this.$post(url,params).then((d)=>{
-            let res = d.data.list;
-            this.Page.count = d.data.count;
+            let res = d.data;
             this.RowUserData = res;
-            this.UserData = this.TransText(res,'error_msg','无');
+            this.UserData = res;
+            if(res.length > 0){
+              this.UserData.forEach(val=>{
+                for(let key in val){
+                  if(key in this.TextArr){
+                    val[key] = this.TextArr[key][val[key]];
+                  }
+                }
+              })
+            }
             that.loading = false;
             resolve();
           })
         })
-      },
-      /**
-       * 转换空字符串
-       */
-      TransText(data,key,val1){
-        data.forEach((val)=>{
-          val[key] = (val[key] === '')?val1:val[key];
-        });
-        return data;
       },
       //刷新列表
       RefreshList(){
         this.InitData('Collection/CollectionList').then(()=>{
           this.$Message.success('刷新成功');
         });
-      },
-      //标记记录
-      TagClassName(row){
-        if(row.marking){
-          return 'table-tag-row';
-        }else{
-          return '';
-        }
-      },
-      //备注按钮
-      RemarkOpt(row){
-        this.Remark.loan_id = row.loan_id;
-        this.Remark.remark = row.remark;
-        this.Remark.modal = true;
-      },
-      //提交备注
-      SubRemark(){
-        this.UploadData('Collection/remark',this.Remark).then(()=>{
-          this.SimpleSearch(0);
-        });
-      },
-      //展期功能
-      DelayOpt(row){
-        let tips = row.allow_delay?'是否关闭展期？':'是否开通展期？';
-        this.$Modal.confirm({
-          title: '提示',
-          content: `<p class="confirm-text">${tips}</p>`,
-          onOk: ()=>{
-            this.UploadData('Collection/allowDelay',{uid: row.id}).then(()=>{
-              this.SimpleSearch(0);
-            });
-          }
-        })
-      },
-      //标记功能
-      MarkOpt(row){
-        this.UploadData('Collection/marking',{loan_id: row.loan_id}).then(()=>{
-          this.SimpleSearch(0);
-        })
       },
       //提交信息操作
       UploadData(url,info){
@@ -284,47 +383,76 @@
             this.$Message.error('服务器繁忙，请稍后再试！');
           })
         })
+      },
+      //添加规则
+      AddRulesModal(){
+        this.RulesModal.data = {
+          sms_type: 0,
+          type: 0,
+          behavior: 0,
+          status: 0,
+          trigger: 0,
+          trigger_date: 0,
+          disable: 1,
+          title: '',
+          content: '',
+          day: 0,
+          hour: 0,
+          min: 0,
+          sec: 0
+        };
+        this.RulesModal.isEdit = false;
+        this.RulesModal.modal = true;
+      },
+      AddOver(){
+        let ninfo = this.RemoveObserve(this.RulesModal.data);
+        const isEdit = this.RulesModal.isEdit;
+        const url = isEdit?'Autopush/autoPushUp':'Autopush/autoPushAdd';
+        if(isEdit){
+          ninfo.id = this.RulesModal.id;
+        }
+        this.UploadData(url,ninfo).then(()=>{
+          this.InitData(this.apiUrl);
+        });
+      },
+      //开启规则
+      ChangeStatus(row){
+        this.UploadData('Autopush/autoPushDisable',{id: row.id}).then(()=>{
+          this.SimpleSearch(0);
+        });
+      },
+      //修改规则
+      EditOpt(row){
+        this.$post('Autopush/autoPushReqUp',{id: row.id}).then(d=>{
+
+          this.RulesModal.data = {
+            sms_type: d.data.sms_type,
+            type: d.data.type,
+            behavior: d.data.behavior,
+            status: d.data.status,
+            trigger: d.data.trigger,
+            trigger_date: d.data.trigger_date,
+            disable: d.data.disable,
+            title: d.data.title,
+            content: d.data.content,
+          };
+          this.RulesModal.isEdit = true;
+          this.RulesModal.id = row.id;
+          this.RulesModal.modal = true;
+        })
+
 
       },
-      //群发短信
-      GroupSmsOpt(){
-        this.Group.SmsModal = true;
-      },
-      CloseSms(){
-        this.Group.SmsModal = false;
-      },
-      SmsOpt(info){
-        console.log(info);
-        this.Group.SmsModal = false;
-      },
-      //导出数据
-      ExportData(){
-        let sinfo = this.RemoveObserve(this.ScreenData);
-        sinfo.expro = 1;
-        this.UploadData('Collection/overdueList',sinfo).then((url)=>{
-          console.log(url);
-          //window.location.href = url;
-        });
-      },
-      //改变页数
-      ChangePage(curpage){
-        let sinfo = Object.assign(this.ScreenData,{
-          page: curpage,
-          num: this.Page.size
-        });
-        this.InitData('Collection/overdueList',sinfo).then(()=>{
-          this.Page.cur = curpage;
-        })
-      },
-      //改变显示条数
-      ChangeSize(size){
-        let sinfo = Object.assign(this.ScreenData,{
-          page: 1,
-          num: size
-        });
-        this.InitData('Collection/overdueList',sinfo).then(()=>{
-          this.Page.cur = 1;
-          this.Page.size = size;
+      //删除规则
+      Delopt(row){
+        this.$Modal.confirm({
+          title: '提示',
+          content: `<p class="confirm-text">删除此规则</p>`,
+          onOk: ()=>{
+            this.UploadData('Autopush/autoPushDel',{id: row.id}).then(()=>{
+              this.SimpleSearch(0);
+            });
+          }
         })
       }
     }
@@ -356,58 +484,15 @@
     flex-direction: row;
     justify-content: space-between;
   }
-  .card-box{
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    padding-bottom: 20px;
-    .sim-card{
-      position: relative;
-      width: 24%;
-      padding: 15px;
-      color: #FFF;
-      overflow: hidden;
-      cursor: pointer;
-      border-radius: 5px;
-      background-color: #c3c3c3;
-      .title{
-        font-size: 16px;
-      }
-      .value{
-        padding: 5px 0;
-        font-size: 18px;
-        .num{
-          font-size: 40px;
-        }
-      }
-      .tips{
-        position: absolute;
-        transition: all 0.1s linear;
-        bottom: -20px;
-        right: 20px;
-        font-size: 14px;
-      }
-      &:hover{
-        .tips{
-          bottom: 10px;
-        }
-      }
-      .icon{
-        position: absolute;
-        right: 20px;
-        top: 20px;
-        font-size: 60px;
-      }
-      &.cur{
-        background-color: #2db7f5;
-        &:hover{
-          .tips{
-            bottom: -20px;
-          }
-        }
-      }
-    }
+  .col-center{
+    text-align: center;
   }
-
+  .auto-height{
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .info-width{
+    width: 200px;
+  }
 </style>

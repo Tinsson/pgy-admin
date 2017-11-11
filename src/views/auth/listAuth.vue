@@ -13,10 +13,9 @@
     </div>
     <Modal
       v-model="AddModal"
-      title="添加菜单"
-      @on-ok="AddOver">
-      <Form :model="AddInfo" label-position="right" :label-width="80">
-        <FormItem label="菜单标题">
+      title="添加菜单">
+      <Form ref="AddInfo" :model="AddInfo" :rules="ValidateRules" label-position="right" :label-width="80">
+        <FormItem label="菜单标题" prop="title">
           <Input v-model="AddInfo.title"></Input>
         </FormItem>
         <FormItem label="按钮类型">
@@ -43,13 +42,13 @@
         <FormItem label="菜单图标">
           <Input v-model="AddInfo.icon"></Input>
         </FormItem>
-        <FormItem label="状态">
+        <FormItem label="状态" prop="status">
           <RadioGroup v-model="AddInfo.status">
             <Radio label="开启"></Radio>
             <Radio label="关闭"></Radio>
           </RadioGroup>
         </FormItem>
-        <FormItem label="排序">
+        <FormItem label="排序" prop="sort">
           <Input v-model="AddInfo.sort"></Input>
         </FormItem>
         <FormItem label="是否为按钮">
@@ -69,13 +68,16 @@
           </Select>
         </FormItem>
       </Form>
+      <div slot="footer">
+        <Button type="text" @click="AddCancel" size="large">取消</Button>
+        <Button type="primary" @click="AddOver" size="large">添加</Button>
+      </div>
     </Modal>
     <Modal
       v-model="EditModal"
-      title="编辑菜单"
-      @on-ok="EditOver">
-      <Form :model="EditInfo" label-position="right" :label-width="80">
-        <FormItem label="菜单标题">
+      title="编辑菜单">
+      <Form ref="EditInfo" :model="EditInfo" :rules="ValidateRules" label-position="right" :label-width="80">
+        <FormItem label="菜单标题" prop="title">
           <Input v-model="EditInfo.title"></Input>
         </FormItem>
         <FormItem label="按钮类型">
@@ -102,13 +104,13 @@
         <FormItem label="菜单图标">
           <Input v-model="EditInfo.icon"></Input>
         </FormItem>
-        <FormItem label="状态">
+        <FormItem label="状态" prop="status">
           <RadioGroup v-model="EditInfo.status">
             <Radio label="开启"></Radio>
             <Radio label="关闭"></Radio>
           </RadioGroup>
         </FormItem>
-        <FormItem label="排序">
+        <FormItem label="排序" prop="sort">
           <Input v-model="EditInfo.sort"></Input>
         </FormItem>
         <FormItem label="是否为按钮">
@@ -128,6 +130,10 @@
           </Select>
         </FormItem>
       </Form>
+      <div slot="footer">
+        <Button type="text" @click="EditCancel" size="large">取消</Button>
+        <Button type="primary" @click="EditOver" size="large">修改</Button>
+      </div>
     </Modal>
 
   </div>
@@ -147,10 +153,12 @@
         UserCol: [
           {
             title: '菜单编号',
-            key: 'id'
+            key: 'id',
+            width: '100'
           },{
             title: '菜单标题',
-            key: 'title'
+            key: 'title',
+            width: '180'
           },{
             title: '菜单图标',
             key: 'icon'
@@ -184,6 +192,17 @@
         DepData: [],     //表格数据
         RowDepData: [],  //获取的原始数据
         BtnData: [],      //按钮数据
+        ValidateRules: {
+          title: [
+            {required: true,message: '菜单标题不能为空！'}
+          ],
+          status: [
+            {required: true,message: '请选择状态！'}
+          ],
+          sort: [
+            {required: true,message: '请填写排序数字！'}
+          ]
+        },
         EditModal: false,
         EditInfo:{
           title: '',
@@ -296,20 +315,24 @@
       },
       //提交信息操作
       UploadData(url,info){
-        if(info.status) info.status = (info.status === '开启')?1:0;
-        this.$post(url,info).then((d)=>{
-          if(d.status === 1){
-            this.$Message.success(d.message);
-            this.InitData();
-          }else{
-            this.$Message.error(d.message);
-          }
-        }).catch((err)=>{
-          this.$Message.error('服务器繁忙，请稍后再试！');
-        })
+        return new Promise(resolve=>{
+          if(info.status) info.status = (info.status === '开启')?1:0;
+          this.$post(url,info).then((d)=>{
+            if(d.status === 1){
+              this.$Message.success(d.message);
+              resolve();
+              this.InitData();
+            }else{
+              this.$Message.error(d.message);
+            }
+          }).catch((err)=>{
+            this.$Message.error('服务器繁忙，请稍后再试！');
+          })
+        });
       },
       //添加部门
       AddOpt(p){
+        this.$refs['AddInfo'].resetFields();
         this.AddInfo.href = '';
         for(let key in this.AddInfo){
           this.AddInfo[key] = '';
@@ -330,9 +353,18 @@
 
         this.AddModal = true;
       },
+      AddCancel(){
+        this.AddModal = false;
+      },
       //提交添加
       AddOver(){
-        this.UploadData('Auth/authAdd',this.AddInfo);
+        this.$refs['AddInfo'].validate((valid)=>{
+          if(valid){
+            this.UploadData('Auth/authAdd',this.AddInfo).then(()=>{
+              this.AddModal = false;
+            });
+          }
+        });
       },
       //编辑操作
       EditOpt(row){
@@ -354,9 +386,18 @@
           }
         }
       },
+      EditCancel(){
+        this.EditModal = false;
+      },
       //提交编辑
       EditOver(){
-        this.UploadData('Auth/authUp',this.EditInfo);
+        this.$refs['EditInfo'].validate(valid=>{
+          if(valid){
+            this.UploadData('Auth/authUp',this.EditInfo).then(()=>{
+              this.EditModal = false;
+            });
+          }
+        });
       },
       //删除菜单
       Delopt(row){

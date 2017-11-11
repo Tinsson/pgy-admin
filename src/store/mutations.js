@@ -1,10 +1,11 @@
-import { getLocal, saveLocal } from '@/util/util'
+import { getLocal, saveLocal, delLocal } from '@/util/util'
 
 const SET_USERNAME = 'SET_USERNAME';
 const SET_VIEW = 'SET_VIEW';
 const SET_PATH = 'SET_PATH';
 const INIT_DATA = 'INIT_DATA';
-const SET_FIRST_VIEW = 'SET_FIRST_VIEW'
+const SET_FIRST_VIEW = 'SET_FIRST_VIEW';
+const DEL_RECORD = 'DEL_RECORD';
 
 export default {
   //设置用户名

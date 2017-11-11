@@ -13,59 +13,65 @@
     </div>
     <Modal
       v-model="AddModal"
-      title="添加账号"
-      @on-ok="AddOver">
-      <Form :model="AddInfo" label-position="right" :label-width="60">
-        <FormItem label="账号名">
+      title="添加账号">
+      <Form ref="AddInfo" :model="AddInfo" :rules="ValidateRules" label-position="right" :label-width="80">
+        <FormItem label="账号名" prop="name">
           <Input v-model="AddInfo.name"></Input>
         </FormItem>
-        <FormItem label="昵称">
+        <FormItem label="昵称" prop="nickname">
           <Input v-model="AddInfo.nickname"></Input>
         </FormItem>
-        <FormItem label="密码">
+        <FormItem label="密码" prop="password">
           <Input v-model="AddInfo.password"></Input>
         </FormItem>
-        <FormItem label="手机号">
+        <FormItem label="手机号" prop="phone">
           <Input v-model="AddInfo.phone"></Input>
         </FormItem>
-        <FormItem label="微信号">
+        <FormItem label="微信号" prop="wechat">
           <Input v-model="AddInfo.wechat"></Input>
         </FormItem>
-        <FormItem label="状态">
+        <FormItem label="状态" prop="is_status">
           <RadioGroup v-model="AddInfo.is_status">
             <Radio label="已启用"></Radio>
             <Radio label="已禁用"></Radio>
           </RadioGroup>
         </FormItem>
       </Form>
+      <div slot="footer">
+        <Button type="text" @click="AddCancel" size="large">取消</Button>
+        <Button type="primary" @click="AddOver" size="large">添加</Button>
+      </div>
     </Modal>
     <Modal
       v-model="EditModal"
-      title="编辑账号"
-      @on-ok="EditOver">
-      <Form :model="EditInfo" label-position="right" :label-width="60">
+      title="编辑账号">
+      <Form ref="EditInfo" :model="EditInfo" :rules="ValidateRules" label-position="right" :label-width="60">
         <FormItem label="账号编号">
           <Input v-model="EditInfo.id" disabled></Input>
         </FormItem>
-        <FormItem label="账号名">
+        <FormItem label="账号名" prop="name">
           <Input v-model="EditInfo.name"></Input>
         </FormItem>
-        <FormItem label="昵称">
+        <FormItem label="昵称" prop="nickname">
           <Input v-model="EditInfo.nickname"></Input>
         </FormItem>
-        <FormItem label="手机号">
+        <FormItem label="手机号" prop="phone">
           <Input v-model="EditInfo.phone"></Input>
         </FormItem>
-        <FormItem label="微信号">
+        <FormItem label="微信号" prop="wechat">
           <Input v-model="EditInfo.wechat"></Input>
         </FormItem>
-        <FormItem label="状态">
+        <FormItem label="状态" prop="is_status">
           <RadioGroup v-model="EditInfo.is_status">
             <Radio label="已启用"></Radio>
             <Radio label="已禁用"></Radio>
           </RadioGroup>
         </FormItem>
       </Form>
+      <div slot="footer">
+        <Button type="text" @click="EditCancel" size="large">取消</Button>
+        <Button type="primary" @click="EditOver" size="large">修改</Button>
+      </div>
     </Modal>
     <RadioModal
       title="分配部门"
@@ -151,9 +157,6 @@
             title: '微信号',
             key: 'wechat'
           },{
-            title: '状态',
-            key: 'is_status'
-          },{
             title: '最近一次登录时间',
             key: 'recent_logintime'
           },{
@@ -224,7 +227,7 @@
           nickname: '',
           phone: '',
           wechat: '',
-          is_status: ''
+          is_status: '已启用'
         },
         AddModal: false,
         //添加数据
@@ -234,7 +237,27 @@
           password: '',
           phone: '',
           wechat: '',
-          is_status: ''
+          is_status: '已启用'
+        },
+        ValidateRules:{
+          name: [
+            {required: true,message: '账号名不能为空！'}
+          ],
+          nickname: [
+            {required: true,message: '昵称不能为空！'}
+          ],
+          password: [
+            {required: true,message: '密码不能为空！'}
+          ],
+          phone: [
+            {required: true,message: '手机号不能为空！'}
+          ],
+          wechat: [
+            {required: true,message: '微信号不能为空！'}
+          ],
+          is_status: [
+            {required: true,message: '请选择状态！'}
+          ]
         }
       }
     },
@@ -246,19 +269,38 @@
       RenderBtn(h,params,bdata){
         let res = [];
         bdata.forEach((val)=>{
-          const btn = h('Button',{
-            props: {
-              type: val.color
-            },
-            style: {
-              marginRight: '5px'
-            },
-            on: {
-              click: ()=>{
-                this[val.class](params.row)
-              }
-            },
-          },val.name);
+          let btn = '';
+          if(val.class === 'ChangeStatus'){
+            const color = (params.row.is_status === '已启用')?'warning':val.color;
+            const name = (params.row.is_status === '已启用')?'禁用': val.name;
+            btn = h('Button',{
+              props: {
+                type: color
+              },
+              style: {
+                marginRight: '5px'
+              },
+              on: {
+                click: ()=>{
+                  this[val.class](params.row)
+                }
+              },
+            },name);
+          }else{
+            btn = h('Button',{
+              props: {
+                type: val.color
+              },
+              style: {
+                marginRight: '5px'
+              },
+              on: {
+                click: ()=>{
+                  this[val.class](params.row)
+                }
+              },
+            },val.name);
+          }
           res.push(btn);
         });
         return res;
@@ -286,15 +328,15 @@
           that.SeeDepList = [];
           d.data.forEach((val,index)=>{
             let data = {
-                id: val.id,
-                role_name: val.title
+              id: val.id,
+              role_name: val.title
             };
             that.SeeDepList.push(data);
           })
         });
         //角色数据获取
         this.$post('Auth/roleList').then((d)=>{
-            that.RoleList = d.data;
+          that.RoleList = d.data;
         });
         //获取按钮信息
         this.$fetch('Menuauth/listAuthGet',{auth_id}).then((d)=>{
@@ -309,29 +351,41 @@
       },
       //提交信息操作
       UploadData(url,info){
-
-        if(info.is_status) info.is_status = info.is_status === '已启用'?1:0;
-        this.$post(url,info).then((d)=>{
-          if(d.status === 1){
-            this.$Message.success(d.message);
-            this.InitData();
-          }else{
-            this.$Message.error(d.message);
-          }
-        }).catch((err)=>{
-          this.$Message.error('服务器繁忙，请稍后再试！');
+        return new Promise((resolve)=>{
+          if(info.is_status) info.is_status = info.is_status === '已启用'?1:0;
+          this.$post(url,info).then((d)=>{
+            if(d.status === 1){
+              this.$Message.success(d.message);
+              resolve();
+              this.InitData();
+            }else{
+              this.$Message.error(d.message);
+            }
+          }).catch((err)=>{
+            this.$Message.error('服务器繁忙，请稍后再试！');
+          })
         })
       },
       //添加角色
       AddShow(){
+        this.$refs['AddInfo'].resetFields();
         for(let key in this.AddInfo){
             this.AddInfo[key] = '';
         }
         this.AddModal = true;
       },
       //提交添加
+      AddCancel(){
+        this.AddModal = false;
+      },
       AddOver(){
-        this.UploadData('Auth/adminUserAdd',this.AddInfo);
+        this.$refs['AddInfo'].validate((valid)=>{
+          if(valid){
+            this.UploadData('Auth/adminUserAdd',this.AddInfo).then(()=>{
+              this.AddModal = false;
+            });
+          }
+        });
       },
       //编辑操作
       EditOpt(row){
@@ -344,9 +398,17 @@
           }
         }
       },
-      //提交编辑
+      EditCancel(){
+        this.EditModal = false;
+      },
       EditOver(){
-        this.UploadData('Auth/adminUserUpdate',this.EditInfo);
+        this.$refs['EditInfo'].validate(valid=>{
+          if(valid){
+            this.UploadData('Auth/adminUserUpdate',this.EditInfo).then(()=>{
+              this.EditModal = false;
+            })
+          }
+        });
       },
       //启用禁用
       ChangeStatus(id){
@@ -364,8 +426,8 @@
       Updepart(info){
         this.AssignDepModal = false;
         let data = {
-            admin_id: info.id,
-            depar_id: info.depar_id
+          admin_id: info.id,
+          depar_id: info.depar_id
         };
         this.UploadData('Auth/deparAdminUser',data);
       },

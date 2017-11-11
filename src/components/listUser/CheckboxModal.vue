@@ -6,7 +6,7 @@
     @on-cancel="CloseBtn">
     <Form :model="InitData" label-position="right" :label-width="60">
       <FormItem :label="label1">
-        <Input v-model="InitData.id"></Input>
+        <Input v-model="InitData.id" :disabled="true"></Input>
       </FormItem>
       <FormItem :label="label2">
         <CheckboxGroup v-model="InitData.check_id">
