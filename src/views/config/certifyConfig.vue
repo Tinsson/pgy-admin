@@ -1,5 +1,5 @@
 <template>
-  <div id="template-edit">
+  <div id="certify-config">
     <h1 class="list-title">
       <span class="tit-text">{{ title }}</span>
     </h1>
@@ -8,10 +8,10 @@
         <div class="card-tit" slot="title">
           <h3>
             <Icon type="clipboard"></Icon>
-            数据列表
+            认证列表
           </h3>
           <div class="btn-box">
-            <Button type="warning" size="large" icon="chatbox" @click="AddModeModal">添加模板</Button>
+            <Button type="warning" size="large" icon="wrench" @click="AddModeModal">添加认证</Button>
           </div>
         </div>
         <Table :columns="UserCol"
@@ -21,24 +21,42 @@
     </div>
     <Modal
       v-model="ModeModal.modal"
-      title="添加模板">
-      <Form ref="ModeModal" :model="ModeModal.data" :rules="ValidateRules" label-position="right" :label-width="80">
-        <FormItem label="启用状态：">
+      title="添加认证">
+      <Form ref="ModeModal" :model="ModeModal.data" :rules="ValidateRules" label-position="right" :label-width="100">
+        <FormItem label="状态：">
           <RadioGroup v-model="ModeModal.data.status">
-            <Radio :label="0">已关闭</Radio>
-            <Radio :label="1">已开启</Radio>
+            <Radio :label="1">开启</Radio>
+            <Radio :label="0">关闭</Radio>
           </RadioGroup>
         </FormItem>
-        <FormItem label="名称：" prop="title">
-          <Input v-model="ModeModal.data.title"></Input>
+        <FormItem label="名称：" prop="cer_name">
+          <Input v-model="ModeModal.data.cer_name"></Input>
         </FormItem>
-        <FormItem label="内容：" prop="content">
-          <Input v-model="ModeModal.data.content" type="textarea" :autosize="{minRows: 3,maxRows: 5}"></Input>
+        <FormItem label="模型名称：" prop="cer_model">
+          <Input v-model="ModeModal.data.cer_model"></Input>
+        </FormItem>
+        <FormItem label="排序：" prop="sort">
+          <InputNumber v-model="ModeModal.data.sort"></InputNumber>
         </FormItem>
       </Form>
       <div slot="footer">
         <Button type="text" @click="ModalCancel" size="large">取消</Button>
         <Button type="primary" @click="AddOver" size="large">保存</Button>
+      </div>
+    </Modal>
+    <Modal v-model="EditModal"
+           title="设置排序">
+      <Form ref="EditSort" :model="EditSort" :rules="ValidateRules" label-position="right" :label-width="100">
+        <FormItem label="名称：" prop="cer_name">
+          <Input v-model="EditSort.cer_name" :disabled="true"></Input>
+        </FormItem>
+        <FormItem label="排序：" prop="val">
+          <InputNumber v-model="EditSort.val"></InputNumber>
+        </FormItem>
+      </Form>
+      <div slot="footer">
+        <Button type="text" @click="EditCancel" size="large">取消</Button>
+        <Button type="primary" @click="EditOver" size="large">保存</Button>
       </div>
     </Modal>
   </div>
@@ -48,26 +66,32 @@
   import { getLocal } from '@/util/util'
 
   export default {
-    name: 'TemplateEdit',
+    name: 'CertifyConfig',
     data () {
       return {
-        title: '模板编辑',
-        apiUrl: 'Autopush/modelList',
+        title: '认证配置',
+        apiUrl: 'Certification/getCertifiList',
         auth_id: '',
         loading: true,
         TextArr:{
           status: ['关闭','开启']
         },
-        //添加规则
+        //添加用户类型
         ModeModal:{
           modal: false,
-          isEdit: false,
-          id: '',
           data: {
+            cer_name: '',
+            cer_model: '',
             status: 1,
-            title: '',
-            content: ''
+            sort: 1
           }
+        },
+        //修改排序
+        EditModal: false,
+        EditSort: {
+          id: '',
+          cer_name: '',
+          val: 0
         },
         UserCol: [
           {
@@ -77,10 +101,16 @@
             key: 'id'
           },{
             title: '名称',
-            key: 'title'
+            key: 'cer_name'
+          },{
+            title: '模型名称',
+            key: 'cer_model'
           },{
             title: '状态',
             key: 'status'
+          },{
+            title: '排序',
+            key: 'sort'
           },{
             title: '操作',
             key: 'operation',
@@ -92,11 +122,17 @@
           }
         ],
         ValidateRules:{
-          title: [
-            {required: true, message: '名称不能为空！'}
+          cer_name: [
+            {required: true, message: '认证名称不能为空！'}
           ],
-          content: [
-            {required: true, message: '内容不能为空！'}
+          cer_model: [
+            {required: true, message: '模型名称不能为空！'}
+          ],
+          sort: [
+            {required: true, message: '排序不能为空！'}
+          ],
+          val: [
+            {required: true, message: '排序不能为空！'}
           ]
         },
         UserData: [],     //表格数据
@@ -169,6 +205,7 @@
             if(d.status === 1){
               this.$Message.success(d.message);
               resolve(d.data);
+              this.InitData(this.apiUrl);
             }else{
               this.$Message.error(d.message);
             }
@@ -177,15 +214,15 @@
           })
         })
       },
-      //添加模板
+      //添加配置
       AddModeModal(){
         this.$refs['ModeModal'].resetFields();
         this.ModeModal.data = {
+          cer_name: '',
+          cer_model: '',
           status: 1,
-          title: '',
-          content: ''
+          sort: 0
         };
-        this.ModeModal.isEdit = false;
         this.ModeModal.modal = true;
       },
       ModalCancel(){
@@ -194,43 +231,41 @@
       AddOver(){
         this.$refs['ModeModal'].validate(valid=>{
           if(valid){
-            this.ModeModal.modal = false;
             let ninfo = this.RemoveObserve(this.ModeModal.data);
-            const isEdit = this.ModeModal.isEdit;
-            const url = isEdit?'Autopush/modelUp':'Autopush/modelAdd';
-            if(isEdit){
-              ninfo.id = this.ModeModal.id;
-            }
+            const url = 'Certification/AddCertifi';
             this.UploadData(url,ninfo).then(()=>{
-              this.InitData(this.apiUrl);
+              this.ModeModal.modal = false;
             });
           }
         });
       },
-      //修改模板
+      //修改操作
       EditOpt(row){
-        let status_num = 0;
-        this.TextArr.status.forEach((val, index)=>{
-          if(row.status === val){
-            status_num = index
-          }
-        })
-        this.ModeModal.data = {
-          title: row.title,
-          content: row.content,
-          status: status_num
-        };
-        this.ModeModal.isEdit = true;
-        this.ModeModal.id = row.id;
-        this.ModeModal.modal = true;
+        this.EditModal = true;
+        this.EditSort.id = row.id;
+        this.EditSort.cer_name = row.cer_name;
+        this.EditSort.val = row.sort;
       },
-      //删除模版
+      EditCancel(){
+        this.EditModal = false;
+      },
+      EditOver(){
+        this.$refs['EditSort'].validate(valid=>{
+          if(valid){
+            let sinfo = this.RemoveObserve(this.EditSort);
+            this.UploadData('Certification/setCertifi',sinfo).then(()=>{
+              this.EditModal = false;
+            })
+          }
+        });
+      },
+      //删除认证配置
       Delopt(row){
         this.$Modal.confirm({
           title: '提示',
-          content: `<p class="confirm-text">删除此模板？</p>`,
+          content: `<p class="confirm-text">删除此认证配置？</p>`,
           onOk: ()=>{
-            this.UploadData('Autopush/modelDel',{id: row.id}).then(()=>{
+            this.UploadData('Certification/delCertifi',{id: row.id}).then(()=>{
               this.InitData(this.apiUrl);
             });
           }

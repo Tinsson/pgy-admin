@@ -1,60 +1,73 @@
 <template>
   <div id="base-info">
-    <h2 class="sub-tit">个人信息</h2>
     <div class="text-part">
       <Table size="large"
-             border="true"
              :columns="UserCol"
              :data="ShortInfo"></Table>
-      <div class="simple long">
-        <div class="state-box">
-          <span class="label">工作单位：</span>
-          <span class="value">{{ UserData.info.company }}</span>
-        </div>
-        <div class="state-box">
-          <span class="label">公司地址：</span>
-          <span class="value">{{ UserData.info.address_company }}</span>
-        </div>
-        <div class="state-box">
-          <span class="label">户籍地址：</span>
-          <span class="value">{{ UserData.info.address }}</span>
-        </div>
-        <div class="state-box">
-          <span class="label">认证状态：</span>
-          <span class="value">{{ RzInfo }}</span>
-        </div>
-        <div class="state-box">
-          <span class="label">审核状态：</span>
-          <span class="value">{{ ShenhInfo }}</span>
-        </div>
-        <div class="state-box">
-          <span class="label">交易状态：</span>
-          <span class="value">{{ UserData.loanstatus}}</span>
-        </div>
+      <div class="simple">
+        <Row>
+          <Col :xs="14" :lg="12">
+            <h2 class="side-title">更多信息</h2>
+            <div class="state-box">
+              <span class="label">工作单位：</span>
+              <span class="value">{{ UserData.info.company }}</span>
+            </div>
+            <div class="state-box">
+              <span class="label">公司地址：</span>
+              <span class="value">{{ UserData.info.address_company }}</span>
+            </div>
+            <div class="state-box">
+              <span class="label">户籍地址：</span>
+              <span class="value">{{ UserData.info.address }}</span>
+            </div>
+            <div class="state-box">
+              <span class="label">认证状态：</span>
+              <span class="value">{{ RzInfo }}</span>
+            </div>
+            <div class="state-box">
+              <span class="label">审核状态：</span>
+              <span class="value">{{ ShenhInfo }}</span>
+            </div>
+            <div class="state-box">
+              <span class="label">交易状态：</span>
+              <span class="value">{{ UserData.loanstatus}}</span>
+            </div>
+          </Col>
+          <Col :xs="10" :lg="12">
+            <h2 class="side-title">添加笔记</h2>
+            <Input v-model="Remark"
+                   type="textarea"
+                   :rows="5"
+                   placeholder="在此纪录你的想法。。。"></Input>
+            <div class="pull-right">
+              <Button type="success" @click="SubRemark" size="large">保存</Button>
+            </div>
+          </Col>
+        </Row>
       </div>
     </div>
-    <h2 class="sub-tit">银行卡</h2>
+    <!--<h2 class="sub-tit">银行卡</h2>
     <div class="table-box">
       <Table :columns="BankCard" :data="BankData"></Table>
-    </div>
-    <h2 class="sub-tit">照片</h2>
+    </div>-->
     <div class="pic-area">
-      <div class="idcard">
-        <p class="tips">身份证正反面</p>
-        <div class="all-sides">
-          <!--<img src="../../../assets/images/idcard.png" alt="">
-          <img src="../../../assets/images/idcard.png" alt="">-->
-          <img v-for="(item, index) in UserData.idcardimg" :src="item" :key="index" alt="">
-        </div>
-      </div>
-      <div class="face">
-        <p class="tips">人脸识别</p>
-        <div class="all-img">
-          <img v-for="(item, index) in UserData.huoti" :src="item" :key="index" alt="">
-        </div>
-      </div>
+      <Row>
+        <Col :xs="14" :lg="12">
+          <h2 class="side-title">身份证正反面</h2>
+          <div class="all-sides">
+            <!--<img src="../../../assets/images/idcard.png" alt="">
+            <img src="../../../assets/images/idcard.png" alt="">-->
+            <img v-for="(item, index) in UserData.idcardimg" :src="item" :key="index" alt="">
+          </div>
+        </Col>
+        <Col :xs="10" :lg="12">
+          <h2 class="side-title">人脸识别</h2>
+          <div class="all-img">
+            <img v-for="(item, index) in UserData.huoti" :src="item" :key="index" alt="">
+          </div>
+        </Col>
+      </Row>
     </div>
-    <div class="base-line"></div>
   </div>
 </template>
 
@@ -69,6 +82,7 @@
         CurId: '',
         RzInfo: '',
         ShenhInfo: '',
+        Remark: '',
         //用户数据
         UserData: {
             info: {}
@@ -151,6 +165,19 @@
         }else{
             obj.black = '是'
         }
+      },
+      SubRemark(){
+        const sinfo = {
+          uid: this.CurId,
+          remark: this.Remark,
+        };
+        this.$post('User/remark', sinfo).then((d)=>{
+          if(d.status === 1){
+            this.$Message.success(d.message);
+          }else{
+            this.$Message.error(d.message);
+          }
+        })
       }
     }
   }
@@ -166,6 +193,7 @@
     padding: 20px 0;
   }
   .text-part{
+    padding: 30px 0;
     display: flex;
     flex-direction: column;
     .simple{
@@ -182,43 +210,36 @@
         flex-direction: row;
       }
       .label{
-        width: 90px;
+        width: 140px;
         display: inline-block;
       }
     }
   }
+  .table-box{
+    padding-bottom: 20px;
+  }
+  .side-title{
+    font-size: 16px;
+    line-height: 30px;
+    padding-bottom: 20px;
+  }
   .pic-area{
-    display: flex;
-    flex-direction: row;
-    .idcard{
-      .tips{
-        font-size: 16px;
-      }
-      .all-sides{
-        width: 450px;
-        img{
-          max-width: 210px;
-          margin-right: 10px;
-        }
-      }
-    }
-    .face{
-      .tips{
-        font-size: 16px;
-      }
-      .all-img{
-        width: 380px;
-        img{
-          max-width: 180px;
-          margin-right: 10px;
-        }
-      }
-
+    width: 100%;
+    padding-top: 30px;
+    border-top: 2px solid #e3e3e3;
+    img{
+      max-width: 40%;
+      margin-right: 10%;
     }
   }
   .base-line{
     width: 100%;
     padding-top: 10px;
     border-bottom: 2px dashed #E3E3E3;
+  }
+  .pull-right{
+    display: flex;
+    flex-direction: row-reverse;
+    padding-top: 15px;
   }
 </style>

@@ -61,6 +61,11 @@
         <FormItem label="微信号" prop="wechat">
           <Input v-model="EditInfo.wechat"></Input>
         </FormItem>
+        <FormItem label="初始页" prop="menu_index">
+          <Select v-model="EditInfo.menu_index">
+            <Option v-for="item in AuthData" :value="item.id" :key="item.id">{{ item.title }}</Option>
+          </Select>
+        </FormItem>
         <FormItem label="状态" prop="is_status">
           <RadioGroup v-model="EditInfo.is_status">
             <Radio label="已启用"></Radio>
@@ -105,6 +110,7 @@
 
 <script>
   import { getLocal } from '@/util/util'
+  import { phoneCheck } from '@/util/valid'
   import RadioModal from '@/components/listUser/RadioModal'
   import CheckboxModal from '@/components/listUser/CheckboxModal'
 
@@ -140,9 +146,11 @@
         UserCol: [
           {
             title: '账号编号',
+            width: '100',
             key: 'id'
           },{
             title: '账号名称',
+            width: '100',
             key: 'admin_name'
           },{
             title: '昵称',
@@ -151,7 +159,11 @@
             title: '手机号',
             key: 'phone'
           },{
+            title: '初始页',
+            key: 'menu_index'
+          },{
             title: '部门编号',
+            width: '100',
             key: 'depar_id'
           },{
             title: '微信号',
@@ -219,6 +231,7 @@
         UserData: [],     //表格数据
         RowUserData: [],  //获取的原始数据
         BtnData: [],      //按钮数据
+        AuthData: [],
         EditModal: false,
         //编辑数据
         EditInfo:{
@@ -227,6 +240,7 @@
           nickname: '',
           phone: '',
           wechat: '',
+          menu_index: '',
           is_status: '已启用'
         },
         AddModal: false,
@@ -250,13 +264,17 @@
             {required: true,message: '密码不能为空！'}
           ],
           phone: [
-            {required: true,message: '手机号不能为空！'}
+            {required: true, message: '手机号码不能为空！'},
+            {validator: phoneCheck, trigger: 'blur'}
           ],
           wechat: [
             {required: true,message: '微信号不能为空！'}
           ],
           is_status: [
             {required: true,message: '请选择状态！'}
+          ],
+          menu_index: [
+            {required: true,message: '初始页不能为空！'}
           ]
         }
       }
@@ -389,7 +407,6 @@
       },
       //编辑操作
       EditOpt(row){
-        this.EditModal = true;
         for(let key in this.EditInfo){
           if(key === 'name'){
             this.EditInfo['name'] = row['admin_name'];
@@ -397,6 +414,15 @@
             this.EditInfo[key] = row[key]
           }
         }
+        this.$fetch('Auth/getUseAuth',{admin_id: row.id}).then(d=>{
+          this.EditModal = true;
+          this.AuthData = d.data;
+          this.AuthData.forEach(val=>{
+            if(val.title === this.EditInfo.menu_index){
+              this.EditInfo.menu_index = val.id;
+            }
+          });
+        });
       },
       EditCancel(){
         this.EditModal = false;

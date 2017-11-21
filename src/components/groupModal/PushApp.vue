@@ -3,7 +3,7 @@
     v-model="AppPushState"
     title="App推送消息"
     @on-cancel="CloseBtn">
-    <Form label-position="right" :label-width="120">
+    <Form ref="Result" :model="Result" :rules="ValidateRules" label-position="right" :label-width="120">
       <FormItem label="发送对象：">
         <div class="object-info">
           共<span class="important-num">{{CountNum}}</span>个用户
@@ -18,11 +18,17 @@
       <FormItem label="推送类型：">
         <RadioGroup v-model="Result.type">
           <Radio label="all">全部</Radio>
-          <Radio label="ios">苹果</Radio>
-          <Radio label="android">安卓</Radio>
+          <Radio label="ios">
+            <Icon type="social-apple"></Icon>
+            <span>苹果</span>
+          </Radio>
+          <Radio label="android">
+            <Icon type="social-android"></Icon>
+            <span>安卓</span>
+          </Radio>
         </RadioGroup>
       </FormItem>
-      <FormItem label="信息模板：">
+      <FormItem label="信息模板：" prop="tmplid">
         <Select v-model="Result.tmplid" style="width: 300px;"
                 placeholder="请选择信息模板">
           <Option v-for="item in ModeOpt" :value="item.id">{{ item.title }}</Option>
@@ -51,7 +57,12 @@
           tmplid: 0,
           all: false
         },
-        ModeOpt: []
+        ModeOpt: [],
+        ValidateRules: {
+          tmplid: [
+            {required: true, message: '信息模板不能为空！'}
+          ]
+        }
       }
     },
     props: {
@@ -90,7 +101,11 @@
         })
       },
       EditOver(){
-        this.$emit('UpOver',this.Result);
+        this.$refs['Result'].validate(valid=>{
+          if(valid){
+            this.$emit('UpOver',this.Result);
+          }
+        })
       },
       CloseBtn(){
         this.$emit('CloseModal',this.modalState);

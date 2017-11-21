@@ -1,5 +1,5 @@
 <template>
-  <div id="template-edit">
+  <div id="pay-config">
     <h1 class="list-title">
       <span class="tit-text">{{ title }}</span>
     </h1>
@@ -8,10 +8,10 @@
         <div class="card-tit" slot="title">
           <h3>
             <Icon type="clipboard"></Icon>
-            数据列表
+            配置列表
           </h3>
           <div class="btn-box">
-            <Button type="warning" size="large" icon="chatbox" @click="AddModeModal">添加模板</Button>
+            <Button type="warning" size="large" icon="wrench" @click="AddModeModal">添加支付渠道</Button>
           </div>
         </div>
         <Table :columns="UserCol"
@@ -21,19 +21,18 @@
     </div>
     <Modal
       v-model="ModeModal.modal"
-      title="添加模板">
-      <Form ref="ModeModal" :model="ModeModal.data" :rules="ValidateRules" label-position="right" :label-width="80">
-        <FormItem label="启用状态：">
-          <RadioGroup v-model="ModeModal.data.status">
-            <Radio :label="0">已关闭</Radio>
-            <Radio :label="1">已开启</Radio>
+      title="添加支付配置">
+      <Form ref="ModeModal" :model="ModeModal.data" :rules="ValidateRules" label-position="right" :label-width="100">
+        <FormItem label="名称：" prop="name">
+          <Select v-model="ModeModal.data.name" style="width:260px">
+            <Option v-for="item in NameArr" :value="item.value" :key="item.id">{{ item.value }}</Option>
+          </Select>
+        </FormItem>
+        <FormItem label="值：" prop="disable">
+          <RadioGroup v-model="ModeModal.data.disable">
+            <Radio :label="0">关闭</Radio>
+            <Radio :label="1">开启</Radio>
           </RadioGroup>
-        </FormItem>
-        <FormItem label="名称：" prop="title">
-          <Input v-model="ModeModal.data.title"></Input>
-        </FormItem>
-        <FormItem label="内容：" prop="content">
-          <Input v-model="ModeModal.data.content" type="textarea" :autosize="{minRows: 3,maxRows: 5}"></Input>
         </FormItem>
       </Form>
       <div slot="footer">
@@ -48,25 +47,22 @@
   import { getLocal } from '@/util/util'
 
   export default {
-    name: 'TemplateEdit',
+    name: 'PayConfig',
     data () {
       return {
-        title: '模板编辑',
-        apiUrl: 'Autopush/modelList',
+        title: '支付配置',
+        apiUrl: 'PaymentSet/paymentList',
         auth_id: '',
         loading: true,
-        TextArr:{
-          status: ['关闭','开启']
-        },
-        //添加规则
+        TextArr:{},
+        //添加统一配置
         ModeModal:{
           modal: false,
           isEdit: false,
           id: '',
           data: {
-            status: 1,
-            title: '',
-            content: ''
+            name: '',
+            disable: 0
           }
         },
         UserCol: [
@@ -77,10 +73,10 @@
             key: 'id'
           },{
             title: '名称',
-            key: 'title'
+            key: 'name'
           },{
-            title: '状态',
-            key: 'status'
+            title: '值',
+            key: 'disable'
           },{
             title: '操作',
             key: 'operation',
@@ -92,20 +88,24 @@
           }
         ],
         ValidateRules:{
-          title: [
+          name: [
             {required: true, message: '名称不能为空！'}
           ],
-          content: [
-            {required: true, message: '内容不能为空！'}
+          disable: [
+            {required: true, message: '值不能为空！'}
           ]
         },
         UserData: [],     //表格数据
         RowUserData: [],  //获取的原始数据
-        BtnData: []
+        BtnData: [],
+        NameArr: []
       }
     },
     created(){
       this.auth_id = getLocal('auth_id');
+      this.$fetch('Unified/UnifiedList').then(d=>{
+        this.NameArr = d.data;
+      });
       this.InitData(this.apiUrl);
     },
     methods: {
@@ -113,19 +113,39 @@
       RenderBtn(h,params,bdata){
         let res = [];
         bdata.forEach((val)=>{
-          const btn = h('Button',{
-            props: {
-              type: val.color
-            },
-            style: {
-              marginRight: '5px'
-            },
-            on: {
-              click: ()=>{
-                this[val.class](params.row)
-              }
-            },
-          },val.name);
+          let btn = '';
+          if(val.class === 'ChangeStatus'){
+            const color = params.row.disable?'warning':val.color;
+            const name = params.row.disable?'禁用': val.name;
+            btn = h('Button',{
+              props: {
+                type: color
+              },
+              style: {
+                marginRight: '5px'
+              },
+              on: {
+                click: ()=>{
+                  this[val.class](params.row)
+                }
+              },
+            },name);
+          }else{
+            btn = h('Button',{
+              props: {
+                type: val.color
+              },
+              style: {
+                marginRight: '5px'
+              },
+              on: {
+                click: ()=>{
+                  this[val.class](params.row)
+                }
+              },
+            },val.name);
+          }
+
           res.push(btn);
         });
         return res;
@@ -177,13 +197,12 @@
           })
         })
       },
-      //添加模板
+      //添加统一配置
       AddModeModal(){
         this.$refs['ModeModal'].resetFields();
         this.ModeModal.data = {
-          status: 1,
-          title: '',
-          content: ''
+          name: '',
+          disable: 0
         };
         this.ModeModal.isEdit = false;
         this.ModeModal.modal = true;
@@ -196,46 +215,21 @@
           if(valid){
             this.ModeModal.modal = false;
             let ninfo = this.RemoveObserve(this.ModeModal.data);
-            const isEdit = this.ModeModal.isEdit;
-            const url = isEdit?'Autopush/modelUp':'Autopush/modelAdd';
-            if(isEdit){
-              ninfo.id = this.ModeModal.id;
-            }
+            const url = 'PaymentSet/paymentAdd';
             this.UploadData(url,ninfo).then(()=>{
               this.InitData(this.apiUrl);
             });
           }
         });
       },
-      //修改模板
-      EditOpt(row){
-        let status_num = 0;
-        this.TextArr.status.forEach((val, index)=>{
-          if(row.status === val){
-            status_num = index
-          }
-        })
-        this.ModeModal.data = {
-          title: row.title,
-          content: row.content,
-          status: status_num
-        };
-        this.ModeModal.isEdit = true;
-        this.ModeModal.id = row.id;
-        this.ModeModal.modal = true;
+      //开启支付
+      ChangeStatus(row){
+        const disable = row.disable?0:1;
+        const id = row.id;
+        this.UploadData('PaymentSet/paymentDsiable',{id,disable}).then(()=>{
+          this.InitData(this.apiUrl);
+        });
       },
-      //删除模版
-      Delopt(row){
-        this.$Modal.confirm({
-          title: '提示',
-          content: `<p class="confirm-text">删除此模板？</p>`,
-          onOk: ()=>{
-            this.UploadData('Autopush/modelDel',{id: row.id}).then(()=>{
-              this.InitData(this.apiUrl);
-            });
-          }
-        })
-      }
     }
   }
 </script>

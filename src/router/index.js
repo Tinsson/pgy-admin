@@ -54,6 +54,17 @@ import workliuList from '@/views/workliu/workliuList'
 import autoPost from '@/views/post/autoPost'
 import templateEdit from '@/views/post/templateEdit'
 
+//配置管理
+import userConfig from '@/views/config/userConfig'
+import formulaConfig from '@/views/config/formulaConfig'
+import certifyConfig from '@/views/config/certifyConfig'
+import versionConfig from '@/views/config/versionConfig'
+import unifiedConfig from '@/views/config/unifiedConfig'
+import payConfig from '@/views/config/payConfig'
+
+//推广管理
+import generalizeList from '@/views/generalize/generalizeList'
+
 //整合所有的模块集合，用于添加路由
 const componentList = {
   AdminFrame,
@@ -81,7 +92,16 @@ const componentList = {
   workliuList,
 
   autoPost,
-  templateEdit
+  templateEdit,
+
+  userConfig,
+  formulaConfig,
+  certifyConfig,
+  versionConfig,
+  unifiedConfig,
+  payConfig,
+
+  generalizeList
 };
 Vue.use(Router);
 
@@ -96,38 +116,45 @@ const routes = [
     component: Login
   },
   {
-    path: '/consumerDetails',
-    name: '查看客户详情',
-    component: consumerDetails,
+    path: '/user',
+    name: '用户详情',
+    component: AdminFrame,
     children: [
       {
-        path: '/',
-        redirect: {path: 'BaseInfo'}
-      },
-      {
-        path: 'BaseInfo',
-        name: '基本信息',
-        component: BaseInfo
-      },
-      {
-        path: 'ThirdParty',
-        name: '第三方授权',
-        component: ThirdParty
-      },
-      {
-        path: 'LendInfo',
-        name: '借贷信息',
-        component: LendInfo
-      },
-      {
-        path: 'RelationInfo',
-        name: '关联关系',
-        component: RelationInfo
-      },
-      {
-        path: 'OptRecord',
-        name: '操作记录',
-        component: OptRecord
+        path: '/consumerDetails',
+        name: '查看客户详情',
+        component: consumerDetails,
+        children: [
+          {
+            path: '/',
+            redirect: {path: 'BaseInfo'}
+          },
+          {
+            path: 'BaseInfo',
+            name: '基本信息',
+            component: BaseInfo
+          },
+          {
+            path: 'ThirdParty',
+            name: '第三方授权',
+            component: ThirdParty
+          },
+          {
+            path: 'LendInfo',
+            name: '借贷信息',
+            component: LendInfo
+          },
+          {
+            path: 'RelationInfo',
+            name: '关联关系',
+            component: RelationInfo
+          },
+          {
+            path: 'OptRecord',
+            name: '操作记录',
+            component: OptRecord
+          }
+        ]
       }
     ]
   },{
@@ -149,18 +176,6 @@ const router = new Router({
 router.beforeEach((to, from, next)=>{
   const token = getLocal('token');
   if(token){
-
-    /*let pathArr = [];
-    let authview = JSON.parse(getLocal('authview'));
-    authview.forEach(val=>{
-      if(val.children.length > 0){
-        val.children.forEach(vval=>{
-
-        })
-      }else{
-        pathArr.push(val.path);
-      }
-    })*/
 
     store.dispatch('setView').then(()=>{
       let permission = JSON.stringify(store.getters.permission);

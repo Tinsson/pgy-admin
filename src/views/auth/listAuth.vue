@@ -18,6 +18,30 @@
         <FormItem label="菜单标题" prop="title">
           <Input v-model="AddInfo.title"></Input>
         </FormItem>
+        <FormItem label="状态" prop="status">
+          <RadioGroup v-model="AddInfo.status">
+            <Radio label="开启"></Radio>
+            <Radio label="关闭"></Radio>
+          </RadioGroup>
+        </FormItem>
+        <FormItem label="排序" prop="sort">
+          <Input v-model="AddInfo.sort"></Input>
+        </FormItem>
+        <FormItem label="菜单图标">
+          <Input v-model="AddInfo.icon" :disabled="AddInfo.iconState"></Input>
+        </FormItem>
+        <FormItem label="目录链接">
+          <Input v-model="AddInfo.function" :disabled="AddInfo.topLevel"></Input>
+        </FormItem>
+        <FormItem label="接口链接">
+          <Input v-model="AddInfo.apiurl" :disabled="AddInfo.topLevel"></Input>
+        </FormItem>
+        <FormItem label="是否为按钮">
+          <RadioGroup v-model="AddInfo.mark">
+            <Radio label="1">是</Radio>
+            <Radio label="0">否</Radio>
+          </RadioGroup>
+        </FormItem>
         <FormItem label="按钮类型">
           <Select v-model="AddInfo.href" :disabled="AddInfo.hideBtn" placeholder="请选择按钮类型">
             <Option value="DetailsOpt">查看按钮</Option>
@@ -35,27 +59,6 @@
             <Option value="AssignRole">分配角色按钮</Option>
             <Option value="SeeDep">可视部门按钮</Option>
           </Select>
-        </FormItem>
-        <FormItem label="目录链接">
-          <Input v-model="AddInfo.function"></Input>
-        </FormItem>
-        <FormItem label="菜单图标">
-          <Input v-model="AddInfo.icon"></Input>
-        </FormItem>
-        <FormItem label="状态" prop="status">
-          <RadioGroup v-model="AddInfo.status">
-            <Radio label="开启"></Radio>
-            <Radio label="关闭"></Radio>
-          </RadioGroup>
-        </FormItem>
-        <FormItem label="排序" prop="sort">
-          <Input v-model="AddInfo.sort"></Input>
-        </FormItem>
-        <FormItem label="是否为按钮">
-          <RadioGroup v-model="AddInfo.mark">
-            <Radio label="1">是</Radio>
-            <Radio label="0">否</Radio>
-          </RadioGroup>
         </FormItem>
         <FormItem label="按钮颜色">
           <Select v-model="AddInfo.color" :disabled="AddInfo.hideBtn" placeholder="请选择按钮类型">
@@ -80,6 +83,30 @@
         <FormItem label="菜单标题" prop="title">
           <Input v-model="EditInfo.title"></Input>
         </FormItem>
+        <FormItem label="状态" prop="status">
+          <RadioGroup v-model="EditInfo.status">
+            <Radio label="开启"></Radio>
+            <Radio label="关闭"></Radio>
+          </RadioGroup>
+        </FormItem>
+        <FormItem label="排序" prop="sort">
+          <Input v-model="EditInfo.sort"></Input>
+        </FormItem>
+        <FormItem label="菜单图标">
+          <Input v-model="EditInfo.icon" :disabled="EditInfo.iconState"></Input>
+        </FormItem>
+        <FormItem label="目录链接">
+          <Input v-model="EditInfo.function" :disabled="EditInfo.topLevel"></Input>
+        </FormItem>
+        <FormItem label="接口链接">
+          <Input v-model="EditInfo.apiurl" :disabled="EditInfo.topLevel"></Input>
+        </FormItem>
+        <FormItem label="是否为按钮">
+          <RadioGroup v-model="EditInfo.mark">
+            <Radio label="1">是</Radio>
+            <Radio label="0">否</Radio>
+          </RadioGroup>
+        </FormItem>
         <FormItem label="按钮类型">
           <Select v-model="EditInfo.href" :disabled="EditInfo.hideBtn" placeholder="请选择按钮类型">
             <Option value="DetailsOpt">查看按钮</Option>
@@ -97,27 +124,6 @@
             <Option value="AssignRole">分配角色按钮</Option>
             <Option value="SeeDep">可视部门按钮</Option>
           </Select>
-        </FormItem>
-        <FormItem label="目录链接">
-          <Input v-model="EditInfo.function"></Input>
-        </FormItem>
-        <FormItem label="菜单图标">
-          <Input v-model="EditInfo.icon"></Input>
-        </FormItem>
-        <FormItem label="状态" prop="status">
-          <RadioGroup v-model="EditInfo.status">
-            <Radio label="开启"></Radio>
-            <Radio label="关闭"></Radio>
-          </RadioGroup>
-        </FormItem>
-        <FormItem label="排序" prop="sort">
-          <Input v-model="EditInfo.sort"></Input>
-        </FormItem>
-        <FormItem label="是否为按钮">
-          <RadioGroup v-model="EditInfo.mark">
-            <Radio label="1">是</Radio>
-            <Radio label="0">否</Radio>
-          </RadioGroup>
         </FormItem>
         <FormItem label="按钮颜色">
           <Select v-model="EditInfo.color" :disabled="EditInfo.hideBtn" placeholder="请选择按钮类型">
@@ -166,13 +172,18 @@
             title: '目录链接',
             key: 'function'
           },{
+            title: '接口链接',
+            key: 'apiurl'
+          },{
             title: '按钮类型',
             key: 'href'
           },{
             title: '状态',
+            width: '80',
             key: 'status'
           },{
             title: '排序',
+            width: '80',
             key: 'sort'
           },{
             title: '操作',
@@ -209,8 +220,11 @@
           id: '',
           icon: '',
           function: '',
+          apiurl: '',
           href: '',
           hideBtn: false,
+          topLevel: false,
+          iconState: false,
           status: '',
           sort: '',
           mark: 1,
@@ -222,8 +236,11 @@
           title: '',
           icon: '',
           function: '',
+          apiurl: '',
           href: '',
           hideBtn: false,
+          topLevel: false,
+          iconState: false,
           status: '',
           sort: '',
           mark: 0,
@@ -338,9 +355,15 @@
           this.AddInfo[key] = '';
         }
         this.AddInfo.mark = 0;
+        this.AddInfo.iconState = true;
+        this.AddInfo.topLevel = true;
         if(p.levelNum === 0){
           this.AddInfo.hideBtn = true;
+          this.AddInfo.iconState = false;
           this.AddInfo.pid = 0;
+        }else if(p.levelNum === 1){
+          this.AddInfo.topLevel = false;
+          this.AddInfo.pid = p.id;
         }else{
           if(p.levelNum === 2){
             this.AddInfo.mark = 1;
@@ -350,7 +373,6 @@
           }
           this.AddInfo.pid = p.id;
         }
-
         this.AddModal = true;
       },
       AddCancel(){
@@ -369,7 +391,7 @@
       //编辑操作
       EditOpt(row){
         this.EditModal = true;
-        console.log(this.EditInfo);
+        console.log(row.levelNum);
         for(let key in this.EditInfo){
           if(key === 'title'){
               let title = row['title'];
@@ -384,6 +406,20 @@
           }else{
             this.EditInfo[key] = row[key];
           }
+        }
+        this.EditInfo.iconState = true;
+        this.EditInfo.topLevel = true;
+        this.EditInfo.hideBtn = true;
+        switch (row.levelNum) {
+          case 1:
+            this.EditInfo.iconState = false;
+            break;
+          case 2:
+            this.EditInfo.topLevel = false;
+            break;
+          case 3:
+            this.EditInfo.hideBtn = false;
+            break;
         }
       },
       EditCancel(){

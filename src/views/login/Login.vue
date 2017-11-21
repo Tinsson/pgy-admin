@@ -5,11 +5,13 @@
       <div class="input-box">
         <h2 class="tips">登陆</h2>
         <Input v-model="username"
+               @on-enter="signIn"
                icon="person"
                placeholder="请输入账号"
                size="large"
                class="ipt"/>
         <Input v-model="password"
+               @on-enter="signIn"
                icon="locked"
                type="password"
                placeholder="请输入密码"
@@ -45,6 +47,9 @@
     },
     methods:{
       signIn(){
+          if(this.validateInfo()){
+            return false;
+          }
           const data = {
               username: this.username,
               password: this.password
@@ -57,6 +62,8 @@
                   saveLocal('token', info.token);
                   saveLocal('username', info.username);
                   saveLocal('auth_id', '');
+                  saveLocal('avator', info.img);
+                  saveLocal('admin_id',info.id);
                   let firstview = d.data.index.function;
                   this.$store.commit('SET_FIRST_VIEW',firstview);
                   this.$store.commit('SET_PATH', firstview);
@@ -81,6 +88,20 @@
                   })
               }
           })
+      },
+      validateInfo(){
+        if(this.username === ""){
+          this.$Message.error("账号不能为空！");
+          return true;
+        }else if(this.password === ""){
+          this.$Message.error("密码不能为空！");
+          return true;
+        }else{
+          return false;
+        }
+      },
+      test(){
+        console.log(33333);
       }
     }
   }
@@ -102,7 +123,7 @@
       top: 15%;
       left: 50%;
       width: 360px;
-      margin-left: -150px;
+      margin-left: -180px;
       .head-text{
         color: #FFF;
         text-align: center;

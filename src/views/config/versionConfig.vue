@@ -1,5 +1,5 @@
 <template>
-  <div id="template-edit">
+  <div id="version-config">
     <h1 class="list-title">
       <span class="tit-text">{{ title }}</span>
     </h1>
@@ -8,10 +8,10 @@
         <div class="card-tit" slot="title">
           <h3>
             <Icon type="clipboard"></Icon>
-            数据列表
+            配置列表
           </h3>
           <div class="btn-box">
-            <Button type="warning" size="large" icon="chatbox" @click="AddModeModal">添加模板</Button>
+            <Button type="warning" size="large" icon="wrench" @click="AddModeModal">添加版本信息</Button>
           </div>
         </div>
         <Table :columns="UserCol"
@@ -21,19 +21,28 @@
     </div>
     <Modal
       v-model="ModeModal.modal"
-      title="添加模板">
-      <Form ref="ModeModal" :model="ModeModal.data" :rules="ValidateRules" label-position="right" :label-width="80">
-        <FormItem label="启用状态：">
-          <RadioGroup v-model="ModeModal.data.status">
-            <Radio :label="0">已关闭</Radio>
-            <Radio :label="1">已开启</Radio>
+      title="添加版本信息">
+      <Form ref="ModeModal" :model="ModeModal.data" :rules="ValidateRules" label-position="right" :label-width="100">
+        <FormItem label="设备类型：">
+          <RadioGroup v-model="ModeModal.data.type">
+            <Radio :label="0">安卓</Radio>
+            <Radio :label="1">IOS</Radio>
           </RadioGroup>
         </FormItem>
-        <FormItem label="名称：" prop="title">
-          <Input v-model="ModeModal.data.title"></Input>
+        <FormItem label="更新类型：">
+          <RadioGroup v-model="ModeModal.data.uptype">
+            <Radio :label="0">非强制更新</Radio>
+            <Radio :label="1">强制更新</Radio>
+          </RadioGroup>
         </FormItem>
-        <FormItem label="内容：" prop="content">
-          <Input v-model="ModeModal.data.content" type="textarea" :autosize="{minRows: 3,maxRows: 5}"></Input>
+        <FormItem label="版本号：" prop="version_sn">
+          <Input v-model="ModeModal.data.version_sn"></Input>
+        </FormItem>
+        <FormItem label="版本地址：" prop="version_address">
+          <Input v-model="ModeModal.data.version_address"></Input>
+        </FormItem>
+        <FormItem label="版本描述：" prop="version_desc">
+          <Input v-model="ModeModal.data.version_desc" type="textarea" :rows="3"></Input>
         </FormItem>
       </Form>
       <div slot="footer">
@@ -48,25 +57,28 @@
   import { getLocal } from '@/util/util'
 
   export default {
-    name: 'TemplateEdit',
+    name: 'VersionConfig',
     data () {
       return {
-        title: '模板编辑',
-        apiUrl: 'Autopush/modelList',
+        title: '版本信息配置',
+        apiUrl: 'Sysconfig/sysVersionList',
         auth_id: '',
         loading: true,
         TextArr:{
-          status: ['关闭','开启']
+          type: ['安卓','IOS'],
+          uptype: ['非强制更新','强制更新']
         },
-        //添加规则
+        //添加用户类型
         ModeModal:{
           modal: false,
           isEdit: false,
           id: '',
           data: {
-            status: 1,
-            title: '',
-            content: ''
+            type: 1,
+            uptype: 1,
+            version_sn: '',
+            version_address: '',
+            version_desc: ''
           }
         },
         UserCol: [
@@ -76,11 +88,20 @@
             align: 'center',
             key: 'id'
           },{
-            title: '名称',
-            key: 'title'
+            title: '设备类型',
+            key: 'type'
           },{
-            title: '状态',
-            key: 'status'
+            title: '更新类型',
+            key: 'uptype'
+          },{
+            title: '版本号',
+            key: 'version_sn'
+          },{
+            title: '版本地址',
+            key: 'version_address'
+          },{
+            title: '版本描述',
+            key: 'version_desc'
           },{
             title: '操作',
             key: 'operation',
@@ -92,11 +113,14 @@
           }
         ],
         ValidateRules:{
-          title: [
-            {required: true, message: '名称不能为空！'}
+          version_sn: [
+            {required: true, message: '版本号不能为空！'}
           ],
-          content: [
-            {required: true, message: '内容不能为空！'}
+          version_address: [
+            {required: true, message: '版本地址不能为空！'}
+          ],
+          version_desc: [
+            {required: true, message: '版本描述不能为空！'}
           ]
         },
         UserData: [],     //表格数据
@@ -181,9 +205,11 @@
       AddModeModal(){
         this.$refs['ModeModal'].resetFields();
         this.ModeModal.data = {
-          status: 1,
-          title: '',
-          content: ''
+          type: 0,
+          uptype: 0,
+          version_sn: '',
+          version_address: '',
+          version_desc: ''
         };
         this.ModeModal.isEdit = false;
         this.ModeModal.modal = true;
@@ -197,7 +223,7 @@
             this.ModeModal.modal = false;
             let ninfo = this.RemoveObserve(this.ModeModal.data);
             const isEdit = this.ModeModal.isEdit;
-            const url = isEdit?'Autopush/modelUp':'Autopush/modelAdd';
+            const url = isEdit?'Sysconfig/sysVersionUp':'Sysconfig/sysVersionAdd';
             if(isEdit){
               ninfo.id = this.ModeModal.id;
             }
@@ -207,30 +233,26 @@
           }
         });
       },
-      //修改模板
+      //修改版本
       EditOpt(row){
-        let status_num = 0;
-        this.TextArr.status.forEach((val, index)=>{
-          if(row.status === val){
-            status_num = index
-          }
-        })
         this.ModeModal.data = {
-          title: row.title,
-          content: row.content,
-          status: status_num
+          type: this.TextArr.type.indexOf(row.type),
+          uptype: this.TextArr.uptype.indexOf(row.uptype),
+          version_sn: row.version_sn,
+          version_address: row.version_address,
+          version_desc: row.version_desc
         };
         this.ModeModal.isEdit = true;
         this.ModeModal.id = row.id;
         this.ModeModal.modal = true;
       },
-      //删除模版
+      //删除版本配置
       Delopt(row){
         this.$Modal.confirm({
           title: '提示',
-          content: `<p class="confirm-text">删除此模板？</p>`,
+          content: `<p class="confirm-text">删除此版本配置？</p>`,
           onOk: ()=>{
-            this.UploadData('Autopush/modelDel',{id: row.id}).then(()=>{
+            this.UploadData('Sysconfig/sysVersionDel',{id: row.id}).then(()=>{
               this.InitData(this.apiUrl);
             });
           }

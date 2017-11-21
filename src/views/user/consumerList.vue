@@ -70,12 +70,14 @@
             数据列表
           </h3>
           <div class="btn-box">
-            <Button type="primary" icon="archive" @click="ExportData">导出数据</Button>
+            <Button type="info" size="large" icon="chatbox" @click="GroupAppOpt">群发APP消息</Button>
+            <Button type="primary" size="large" icon="archive" @click="ExportData">导出数据</Button>
           </div>
         </div>
         <Table :columns="UserCol"
                :data="UserData"
-               :loading="loading" ></Table>
+               :loading="loading"
+               @on-selection-change="SelectTable"></Table>
         <div class="page-box">
           <Page :current="Page.cur"
                 :page-size="Page.size"
@@ -90,7 +92,7 @@
            :width="600"
            @on-ok="SeniorSearch">
       <h2 slot="header">高级筛选</h2>
-      <Form :model="SeniorData" label-position="right" :label-width="90" inline>
+      <Form :model="SeniorData" label-position="right" class="auto-height" :label-width="90" inline>
         <h3 class="senior-subtit">基础数据：</h3>
         <FormItem label="用户姓名：">
           <Input v-model="SeniorData.name"></Input>
@@ -211,6 +213,11 @@
         <Button type="info" @click="SeniorSearch">提交筛选</Button>
       </p>
     </Modal>
+    <PushApp :modalShow="Group.AppmsgModal"
+             :InitData="SelectData"
+             :Count="Page.count"
+             @CloseModal="CloseApp"
+             @UpOver="AppOpt"></PushApp>
   </div>
     <ConsumerEdit v-show="isEdit" :info="EditData" :uid="EditId" @BackOpt="ListShow"></ConsumerEdit>
   </div>
@@ -219,11 +226,13 @@
 <script>
   import { getLocal } from '@/util/util'
   import ConsumerEdit from '@/views/user/consumerEdit'
+  import PushApp from '@/components/groupModal/PushApp'
 
   export default {
     name: 'consumerList',
     components: {
-      ConsumerEdit
+      ConsumerEdit,
+      PushApp
     },
     data () {
       return {
@@ -313,6 +322,11 @@
             }
           }
         ],
+        SelectData: [],
+        Group: {
+          SmsModal: false,
+          AppmsgModal: false
+        },
         UserData: [],     //表格数据
         RowUserData: [],  //获取的原始数据
         //初始分页
@@ -410,6 +424,16 @@
           for(let key in this.ScreenData){
               this.ScreenData[key] = '';
           }
+      },
+      //多选打钩绑定数据
+      SelectTable(data){
+        let idarr = [];
+        if(data.length > 0){
+          data.forEach(val=>{
+            idarr.push(val.id);
+          })
+        }
+        this.SelectData = idarr;
       },
       //查询结果
       SimpleSearch(){
@@ -621,12 +645,27 @@
           }
         })
       },
+      //App推送
+      GroupAppOpt(){
+        this.Group.AppmsgModal = true;
+      },
+      CloseApp(){
+        this.Group.AppmsgModal = false;
+      },
+      AppOpt(info){
+        let sinfo = this.RemoveObserve(info);
+        sinfo.regid = (sinfo.type.length > 0)?sinfo.regid.join(','):'';
+        console.log(sinfo);
+        this.UploadData('Push/pushs',sinfo).then(()=>{
+          this.Group.AppmsgModal = false;
+        });
+      },
       //导出数据
       ExportData(){
         let sinfo = this.RemoveObserve(this.SeniorData);
         sinfo.expro = 1;
-        this.UploadData('User/getUserList',sinfo).then((url)=>{
-          window.location.href = url;
+        this.$post('User/getUserList',sinfo).then((d)=>{
+          window.location.href = d.data;
         });
       },
       //改变页数
@@ -719,6 +758,11 @@
         }
       }
     }
+  }
+  .auto-height{
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 530px;
   }
 
 </style>

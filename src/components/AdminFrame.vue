@@ -12,8 +12,9 @@
           欣荣钱包
         </div>
         <div class="user-panel">
-          <div class="pull-left">
-            <img class="avator" src="../assets/images/avator.jpg" alt="">
+          <div class="pull-left hand" @click="OpenCenter">
+            <img v-show="NoPic" class="avator" src="../assets/images/avator.jpg" alt="">
+            <img v-show="!NoPic" class="avator" :src="AvatorImg" alt="">
           </div>
           <div class="pull-left">
             <p class="text">{{ username }}</p>
@@ -38,13 +39,37 @@
           退出登录
         </p>
       </div>
-      <div class="layout-content" :style="{minHeight: contentHeight}">
+      <div class="layout-content" :style="{minHeight: contentHeight,backgroundColor: contentBg}">
         <div class="layout-content-main">
           <router-view></router-view>
         </div>
       </div>
       </Col>
     </Row>
+    <Modal v-model="CenterModal.modal"
+           title="修改个人信息">
+      <Form ref="CenterModal" :model="CenterModal.data" :rules="ValidateRules" label-position="right" :label-width="100">
+        <FormItem label="用户名字：">
+          <Input v-model="CenterModal.data.username" disabled></Input>
+        </FormItem>
+        <FormItem label="密码：">
+          <Input v-model="CenterModal.data.pwd1"></Input>
+        </FormItem>
+        <FormItem label="再次输入：">
+          <Input v-model="CenterModal.data.pwd2"></Input>
+        </FormItem>
+        <FormItem label="头像：">
+          <Upload :before-upload="HandleAvator" action="http://api.xrjinrong.com/backend/Auth/adminUserUppwd">
+            <Button type="ghost" icon="ios-cloud-upload-outline">上传图片</Button>
+          </Upload>
+          <img v-show="ShowImg" class="avator-modal" :src="CenterModal.data.img" alt="">
+        </FormItem>
+      </Form>
+      <div slot="footer">
+        <Button type="text" @click="ModalCancel" size="large">取消</Button>
+        <Button type="primary" @click="SubmitOver" size="large">保存</Button>
+      </div>
+    </Modal>
   </div>
 </template>
 
@@ -57,17 +82,42 @@
     data () {
       const height = window.innerHeight;
       return {
-        Avator: '/static/images/avator.jpg',
+        AvatorImg: '',
         NowPath: '/index',
         RightHeight: `${height}px`,
         contentHeight: `${height - 100}px`,
         currentpath: '',
-        openname: ['/auth']
+        openname: ['/auth'],
+        contentBg: '#FFFFFF',
+        CenterModal:{
+          modal: false,
+          data: {
+            admin_id: '',
+            username: '',
+            pwd1: '',
+            pwd2: '',
+            img: ''
+          }
+        },
+        ValidateRules:{
+          pwd1:[
+            {required: true, message: '密码不能为空！'}
+          ],
+          pwd2:[
+            {required: true, message: '请重复输入相同的密码！'}
+          ]
+        }
       }
     },
     created(){
       //设置当前路由
+      this.CenterModal.data.username = getLocal('username');
+      this.CenterModal.data.admin_id = getLocal('admin_id');
+      this.AvatorImg = getLocal('avator');
       this.currentpath = getLocal('path');
+      if(/consumerDetails/.test(this.currentpath)){
+        this.contentBg = '#f5f7f9';
+      }
       this.NowPath = this.currentpath;
       //设置打开的导航组件
       this.openname[0] = '/'+this.currentpath.split('/')[1];
@@ -81,21 +131,53 @@
     },
     methods: {
       loginOut(){
-          //确认退出登录
-          this.$Modal.confirm({
-            title: '温馨提示',
-            content: '<p class="confirm-text">确认退出登录吗？</p>',
-            onOk: ()=>{
-              window.localStorage.clear();
-              saveLocal('path','/login');
-              this.$router.push({path:"/"});
-            }
-          })
+        //确认退出登录
+        this.$Modal.confirm({
+          title: '温馨提示',
+          content: '<p class="confirm-text">确认退出登录吗？</p>',
+          onOk: ()=>{
+            window.localStorage.clear();
+            saveLocal('path','/login');
+            this.$router.push({path:"/"});
+          }
+        })
+      },
+      OpenCenter(){
+        this.CenterModal.modal = true;
+      },
+      ModalCancel(){
+        this.CenterModal.modal = false;
+      },
+      SubmitOver(){
+        this.$post('Auth/adminUserUppwd',this.CenterModal.data).then((d)=>{
+          if(d.status === 1){
+            this.$Message.success(d.message);
+            this.AvatorImg = d.data.img;
+            saveLocal('avator',d.data.img);
+            this.CenterModal.modal = false;
+          }else{
+            this.$Message.error(d.message);
+          }
+        }).catch((err)=>{
+          this.$Message.error('服务器繁忙，请稍后再试！');
+        })
+      },
+      HandleAvator(file){
+        const that = this;
+        let reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function (f) {
+          that.CenterModal.data.img = this.result;
+        };
+        return false;
       }
     },
     watch: {
       '$route'(){
         const path = this.$route.path;
+        this.openname[0] = '/'+path.match(/\/([^\/]*)\//)[1];
+        console.log(this.openname);
+        this.currentpath = path;
         this.NowPath = path;
       },
       RightHeight(val){
@@ -111,7 +193,21 @@
       }
     },
     computed: {
-      ...mapState(['username','authView'])
+      ...mapState(['username','authView']),
+      ShowImg(){
+        if(this.CenterModal.data.img === ''){
+          return false;
+        }else{
+          return true;
+        }
+      },
+      NoPic(){
+        if(this.AvatorImg === 'null'){
+          return true;
+        }else{
+          return false;
+        }
+      }
     }
   }
 </script>
@@ -194,8 +290,12 @@
       display: inline-block;
       padding-right: 10%;
       color: #FFF;
+      &.hand{
+        cursor: pointer;
+      }
       .avator{
         width: 45px;
+        object-fit: cover;
         border-radius: 50%;
         margin-right: 3px;
       }
@@ -215,5 +315,12 @@
         }
       }
     }
+  }
+  .avator-modal{
+    width: 50px;
+    height: 50px;
+    display: inline-block;
+    object-fit: cover;
+    margin-right: 20px;
   }
 </style>

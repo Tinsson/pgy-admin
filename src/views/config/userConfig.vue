@@ -1,5 +1,5 @@
 <template>
-  <div id="template-edit">
+  <div id="user-config">
     <h1 class="list-title">
       <span class="tit-text">{{ title }}</span>
     </h1>
@@ -8,10 +8,10 @@
         <div class="card-tit" slot="title">
           <h3>
             <Icon type="clipboard"></Icon>
-            数据列表
+            配置列表
           </h3>
           <div class="btn-box">
-            <Button type="warning" size="large" icon="chatbox" @click="AddModeModal">添加模板</Button>
+            <Button type="warning" size="large" icon="wrench" @click="AddModeModal">添加类型</Button>
           </div>
         </div>
         <Table :columns="UserCol"
@@ -21,19 +21,19 @@
     </div>
     <Modal
       v-model="ModeModal.modal"
-      title="添加模板">
-      <Form ref="ModeModal" :model="ModeModal.data" :rules="ValidateRules" label-position="right" :label-width="80">
-        <FormItem label="启用状态：">
-          <RadioGroup v-model="ModeModal.data.status">
-            <Radio :label="0">已关闭</Radio>
-            <Radio :label="1">已开启</Radio>
-          </RadioGroup>
+      title="添加等级">
+      <Form ref="ModeModal" :model="ModeModal.data" :rules="ValidateRules" label-position="right" :label-width="100">
+        <FormItem label="等级：" prop="level">
+          <Input v-model="ModeModal.data.level"></Input>
         </FormItem>
-        <FormItem label="名称：" prop="title">
-          <Input v-model="ModeModal.data.title"></Input>
+        <FormItem label="分数下限：" prop="between_start">
+          <InputNumber v-model="ModeModal.data.between_start"></InputNumber>
         </FormItem>
-        <FormItem label="内容：" prop="content">
-          <Input v-model="ModeModal.data.content" type="textarea" :autosize="{minRows: 3,maxRows: 5}"></Input>
+        <FormItem label="分数上限：" prop="between_end">
+          <InputNumber v-model="ModeModal.data.between_end"></InputNumber>
+        </FormItem>
+        <FormItem label="备注：">
+          <Input v-model="ModeModal.data.remark" type="textarea" :rows="3"></Input>
         </FormItem>
       </Form>
       <div slot="footer">
@@ -48,25 +48,26 @@
   import { getLocal } from '@/util/util'
 
   export default {
-    name: 'TemplateEdit',
+    name: 'UserConfig',
     data () {
       return {
-        title: '模板编辑',
-        apiUrl: 'Autopush/modelList',
+        title: '用户类型配置',
+        apiUrl: 'Sysconfig/sysLevelList',
         auth_id: '',
         loading: true,
         TextArr:{
           status: ['关闭','开启']
         },
-        //添加规则
+        //添加用户类型
         ModeModal:{
           modal: false,
           isEdit: false,
           id: '',
           data: {
-            status: 1,
-            title: '',
-            content: ''
+            level: '',
+            between_start: 0,
+            between_end: 100,
+            remark: ''
           }
         },
         UserCol: [
@@ -76,11 +77,17 @@
             align: 'center',
             key: 'id'
           },{
-            title: '名称',
-            key: 'title'
+            title: '等级',
+            key: 'level'
           },{
-            title: '状态',
-            key: 'status'
+            title: '分数下限',
+            key: 'between_start'
+          },{
+            title: '分数上限',
+            key: 'between_end'
+          },{
+            title: '备注',
+            key: 'remark'
           },{
             title: '操作',
             key: 'operation',
@@ -92,11 +99,14 @@
           }
         ],
         ValidateRules:{
-          title: [
-            {required: true, message: '名称不能为空！'}
+          level: [
+            {required: true, message: '等级不能为空！'}
           ],
-          content: [
-            {required: true, message: '内容不能为空！'}
+          between_start: [
+            {required: true, message: '下限不能为空！'}
+          ],
+          between_end: [
+            {required: true, message: '上限不能为空！'}
           ]
         },
         UserData: [],     //表格数据
@@ -177,13 +187,14 @@
           })
         })
       },
-      //添加模板
+      //添加操作
       AddModeModal(){
         this.$refs['ModeModal'].resetFields();
         this.ModeModal.data = {
-          status: 1,
-          title: '',
-          content: ''
+          level: '',
+          between_start: 0,
+          between_end: 100,
+          remark: ''
         };
         this.ModeModal.isEdit = false;
         this.ModeModal.modal = true;
@@ -197,7 +208,7 @@
             this.ModeModal.modal = false;
             let ninfo = this.RemoveObserve(this.ModeModal.data);
             const isEdit = this.ModeModal.isEdit;
-            const url = isEdit?'Autopush/modelUp':'Autopush/modelAdd';
+            const url = isEdit?'Sysconfig/sysLevelUp':'Sysconfig/sysLevelAdd';
             if(isEdit){
               ninfo.id = this.ModeModal.id;
             }
@@ -207,30 +218,25 @@
           }
         });
       },
-      //修改模板
+      //修改操作
       EditOpt(row){
-        let status_num = 0;
-        this.TextArr.status.forEach((val, index)=>{
-          if(row.status === val){
-            status_num = index
-          }
-        })
         this.ModeModal.data = {
-          title: row.title,
-          content: row.content,
-          status: status_num
+          level: row.level,
+          between_start: row.between_start,
+          between_end: row.between_end,
+          remark: row.remark
         };
         this.ModeModal.isEdit = true;
         this.ModeModal.id = row.id;
         this.ModeModal.modal = true;
       },
-      //删除模版
+      //删除用户类型
       Delopt(row){
         this.$Modal.confirm({
           title: '提示',
-          content: `<p class="confirm-text">删除此模板？</p>`,
+          content: `<p class="confirm-text">删除此用户类型？</p>`,
           onOk: ()=>{
-            this.UploadData('Autopush/modelDel',{id: row.id}).then(()=>{
+            this.UploadData('Sysconfig/sysLevelDel',{id: row.id}).then(()=>{
               this.InitData(this.apiUrl);
             });
           }

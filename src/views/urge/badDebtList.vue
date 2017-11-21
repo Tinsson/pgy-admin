@@ -49,8 +49,8 @@
             数据列表
           </h3>
           <div class="btn-box">
-            <Button type="warning" size="large" icon="chatbubble" @click="GroupSmsOpt">群发短信</Button>
-            <Button type="info" size="large" icon="chatbox">群发APP消息</Button>
+            <!--<Button type="warning" size="large" icon="chatbubble" @click="GroupSmsOpt">群发短信</Button>-->
+            <Button type="info" size="large" icon="chatbox" @click="GroupAppOpt">群发APP消息</Button>
             <Button type="primary" size="large" icon="archive" @click="ExportData">导出数据</Button>
           </div>
         </div>
@@ -80,17 +80,24 @@
               :InitData="SelectData"
               @CloseModal="CloseSms"
               @UpOver="SmsOpt"></GroupSms>
+    <PushApp :modalShow="Group.AppmsgModal"
+             :InitData="SelectData"
+             :Count="Page.count"
+             @CloseModal="CloseApp"
+             @UpOver="AppOpt"></PushApp>
   </div>
 </template>
 
 <script>
   import { getLocal } from '@/util/util'
   import GroupSms from '@/components/groupModal/GroupSms'
+  import PushApp from '@/components/groupModal/PushApp'
 
   export default {
     name: 'badDebtList',
     components:{
-      GroupSms
+      GroupSms,
+      PushApp
     },
     data () {
       return {
@@ -295,7 +302,7 @@
         const that = this;
         this.loading = true;
         //获取按钮信息
-        this.$fetch('Collection/overdueList',{auth_id: this.auth_id}).then((d)=>{
+        this.$fetch('Menuauth/listAuthGet',{auth_id: this.auth_id}).then((d)=>{
           this.BtnData = d.data.operation;
         });
         //列表数据获取
@@ -390,6 +397,22 @@
       SmsOpt(info){
         console.log(info);
         this.Group.SmsModal = false;
+      },
+      //App推送
+      GroupAppOpt(){
+        this.Group.AppmsgModal = true;
+      },
+      CloseApp(){
+        this.Group.AppmsgModal = false;
+      },
+      AppOpt(info){
+        let sinfo = this.RemoveObserve(info);
+        sinfo.regid = (sinfo.type.length > 0)?sinfo.regid.join(','):'';
+        console.log(sinfo);
+        this.UploadData('Push/pushs',sinfo).then(()=>{
+          this.Group.AppmsgModal = false;
+        });
+        //this.Group.AppmsgModal = false;
       },
       //导出数据
       ExportData(){

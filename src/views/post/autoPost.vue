@@ -54,9 +54,8 @@
     </div>
     <Modal
       v-model="RulesModal.modal"
-      title="添加规则"
-      @on-ok="AddOver">
-      <Form :model="RulesModal.data" label-position="right" :label-width="80" class="auto-height">
+      title="添加规则">
+      <Form ref="RulesModal" :model="RulesModal.data" :rules="ValidateRules" label-position="right" :label-width="80" class="auto-height">
         <FormItem label="启用状态：">
           <RadioGroup v-model="RulesModal.data.disable">
             <Radio :label="0">已禁用</Radio>
@@ -69,7 +68,7 @@
             <Radio :label="1">短信推送</Radio>
           </RadioGroup>
         </FormItem>
-        <FormItem label="类型：">
+        <FormItem label="类型：" porp="type">
           <Select v-model="RulesModal.data.type" class="info-width">
             <Option :value="0">获客类</Option>
             <Option :value="1">认证类</Option>
@@ -77,12 +76,12 @@
             <Option :value="3">催收提醒类</Option>
           </Select>
         </FormItem>
-        <FormItem label="行为：" v-show="BehaviorData.show">
+        <FormItem label="行为：" v-show="BehaviorData.show" prop="behavior">
           <Select v-model="RulesModal.data.behavior" class="info-width">
             <Option v-for="(opt, index) in BehaviorArr" :value="index" :key="opt">{{opt}}</Option>
           </Select>
         </FormItem>
-        <FormItem label="状态：">
+        <FormItem label="状态：" prop="status">
           <Select v-model="RulesModal.data.status" class="info-width">
             <Option v-for="(opt, index) in StatusArr" :value="index" :key="opt">{{opt}}</Option>
           </Select>
@@ -92,7 +91,7 @@
             <Radio v-for="(opt, index) in TriggerArr" :label="index" :key="opt">{{opt}}</Radio>
           </RadioGroup>
         </FormItem>
-        <FormItem label="时长：">
+        <FormItem label="时长：" prop="trigger_date">
           <Row>
             <Col span="3">
               <Input :number="true" v-model="RulesModal.data.trigger_date"></Input>
@@ -112,13 +111,17 @@
             <Col span="2" class="col-center" v-show="IsUrge">秒</Col>-->
           </Row>
         </FormItem>
-        <FormItem label="名称：">
+        <FormItem label="名称：" prop="title">
           <Input v-model="RulesModal.data.title"></Input>
         </FormItem>
-        <FormItem label="内容：">
+        <FormItem label="内容：" prop="content">
           <Input v-model="RulesModal.data.content" type="textarea" :autosize="{minRows: 3,maxRows: 5}"></Input>
         </FormItem>
       </Form>
+      <div slot="footer">
+        <Button type="text" @click="ModalCancel" size="large">取消</Button>
+        <Button type="primary" @click="AddOver" size="large">保存</Button>
+      </div>
     </Modal>
   </div>
 </template>
@@ -229,6 +232,27 @@
         UserData: [],     //表格数据
         RowUserData: [],  //获取的原始数据
         BtnData: [],
+        //验证规则
+        ValidateRules:{
+          type: [
+            {required: true, message: '类型不能为空！'}
+          ],
+          behavior: [
+            {required: true, message: '行为不能为空！'}
+          ],
+          status: [
+            {required: true, message: '状态不能为空！'}
+          ],
+          trigger_date: [
+            {required: true, message: '触发时间不能为空！'}
+          ],
+          title: [
+            {required: true, message: '名称不能为空！'}
+          ],
+          content: [
+            {required: true, message: '内容不能为空！'}
+          ]
+        },
         //群选打钩后操作
         SelectData: []
       }
@@ -386,6 +410,7 @@
       },
       //添加规则
       AddRulesModal(){
+        this.$refs['RulesModal'].resetFields();
         this.RulesModal.data = {
           sms_type: 0,
           type: 0,
@@ -404,15 +429,22 @@
         this.RulesModal.isEdit = false;
         this.RulesModal.modal = true;
       },
+      ModalCancel(){
+        this.RulesModal.modal = false;
+      },
       AddOver(){
-        let ninfo = this.RemoveObserve(this.RulesModal.data);
-        const isEdit = this.RulesModal.isEdit;
-        const url = isEdit?'Autopush/autoPushUp':'Autopush/autoPushAdd';
-        if(isEdit){
-          ninfo.id = this.RulesModal.id;
-        }
-        this.UploadData(url,ninfo).then(()=>{
-          this.InitData(this.apiUrl);
+        this.$refs['RulesModal'].validate(valid=>{
+          if(valid){
+            let ninfo = this.RemoveObserve(this.RulesModal.data);
+            const isEdit = this.RulesModal.isEdit;
+            const url = isEdit?'Autopush/autoPushUp':'Autopush/autoPushAdd';
+            if(isEdit){
+              ninfo.id = this.RulesModal.id;
+            }
+            this.UploadData(url,ninfo).then(()=>{
+              this.InitData(this.apiUrl);
+            });
+          }
         });
       },
       //开启规则

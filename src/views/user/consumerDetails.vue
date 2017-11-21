@@ -2,27 +2,29 @@
   <div id="consumer-details">
     <div class="info-box">
       <div class="head-info">
-        <div class="avator">
-          <img src="/static/images/avator.jpg" alt="">
-        </div>
         <div class="text">
-          <p class="text-line">
-            <span class="text-label name">{{ UserData.name }}</span>
-            <Icon type="male" color="#1FB5AD" size="18" v-if="UserData.sex === '男'"></Icon>
-            <Icon type="female" color="#F8146F" size="18" v-if="UserData.sex === '女'"></Icon>
-          </p>
-          <p class="text-line">
-            <span class="text-label">客户ID：</span>
-            <span class="text-value">{{ CurId }}</span>
-          </p>
-          <!--<p class="text-line">
-            <span class="text-label">微信号：</span>
-            <span class="text-value">未关注</span>
-          </p>-->
-          <p class="text-line">
-            <span class="text-label">手机号：</span>
-            <span class="text-value">{{ UserData.phone }}</span>
-          </p>
+          <div class="avator">
+            <img src="/static/images/avator.jpg" alt="">
+          </div>
+          <div class="text-box">
+            <p class="text-line">
+              <span class="text-label name">{{ UserData.name }}</span>
+              <Icon type="male" color="#1FB5AD" size="18" v-if="UserData.sex === '男'"></Icon>
+              <Icon type="female" color="#F8146F" size="18" v-if="UserData.sex === '女'"></Icon>
+            </p>
+            <p class="text-line">
+              <span class="text-label">客户ID：</span>
+              <span class="text-value">{{ CurId }}</span>
+            </p>
+            <!--<p class="text-line">
+              <span class="text-label">微信号：</span>
+              <span class="text-value">未关注</span>
+            </p>-->
+            <p class="text-line">
+              <span class="text-label">手机号：</span>
+              <span class="text-value">{{ UserData.phone }}</span>
+            </p>
+          </div>
         </div>
         <ul class="person">
           <li class="person-box">
@@ -46,7 +48,7 @@
         <router-view></router-view>
       </div>
     </div>
-    <div class="side-box">
+    <!--<div class="side-box">
       <div class="side-card">
         <p class="side-tit">
           下载逾期报告
@@ -74,7 +76,7 @@
           <a href="javascript:;" class="side-btn">写笔记</a>
         </div>
       </div>
-    </div>
+    </div>-->
   </div>
 </template>
 
@@ -146,36 +148,40 @@
   @theme: #1FB5AD;
   @line: #E3E3E3;
   #consumer-details{
-    width: 1400px;
+    width: 100%;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     margin: 0 auto;
-    padding-top: 20px;
+    background: #f5f7f9;
   }
   .info-box{
-    width: 1050px;
+    width: 100%;
     .head-info{
       width: 100%;
       padding: 15px 0;
       border: 1px solid @line;
       display: flex;
       flex-direction: row;
-      .avator{
-        width: 80px;
-        height: 80px;
-        margin-left: 50px;
-        img{
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-      }
+      justify-content: space-between;
+      background: #FFF;
       .text{
-        width: 400px;
         margin-left: 20px;
         font-size: 14px;
         color: #999;
+        display: flex;
+        flex-direction: row;
+        .avator{
+          width: 80px;
+          height: 80px;
+          margin-left: 50px;
+          img{
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            object-fit: cover;
+          }
+        }
         .text-line{
           .text-label{
             display:inline-block;
@@ -183,6 +189,7 @@
             text-align: right;
             &.name{
               color: #000;
+              padding-top: 10px;
               padding-right: 10px;
               font-weight: bold;
               font-size: 16px;
@@ -191,20 +198,27 @@
         }
       }
       .person{
-        width: 220px;
+        width: 180px;
         display: flex;
         flex-direction: row;
         justify-content: space-between;
         font-size: 16px;
+        margin-right: 50px;
         text-align: center;
+        padding-top: 15px;
+        font-weight: bold;
         .person-text{
-          margin-top: 20px;
+          margin-top: 10px;
+          font-weight: normal;
+          font-size: 14px;
+          color: #999;
         }
       }
     }
     .center-info{
       border: 1px solid @line;
       margin-top: 20px;
+      background: #FFF;
       .center-nav{
         width: 100%;
         display: flex;
@@ -221,8 +235,7 @@
             border-left: none;
           }
           &.cur{
-            background: @theme;
-            color: #FFF;
+            border-bottom: 2px solid #3c8dbc;
           }
         }
       }
