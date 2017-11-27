@@ -358,6 +358,7 @@
         return new Promise((resolve)=>{
           this.$post(url,params).then((d)=>{
             let res = d.data.list;
+            console.table(res);
             if(isinit){
               this.CountData[0].count = d.data.today_count;
               this.CountData[1].count = d.data.yuqi_count;

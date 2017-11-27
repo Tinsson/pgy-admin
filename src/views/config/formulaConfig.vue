@@ -42,7 +42,8 @@
     </div>
     <Modal
       v-model="ModeModal.modal"
-      title="添加公式">
+      title="添加公式"
+      :width="650">
       <Form ref="ModeModal" :model="ModeModal.data" :rules="ValidateRules" label-position="right" :label-width="100">
         <FormItem label="状态：">
           <RadioGroup v-model="ModeModal.data.status">
@@ -59,8 +60,8 @@
         <FormItem label="公式内容：">
           <Input v-model="ModeModal.data.content" type="textarea" :rows="2" readonly></Input>
           <div class="chose-box">
-            <Select v-model="ParamsEdit" style="width:80px">
-              <Option v-for="item in ParamsAll" :value="item.name_en" :key="item.id">{{ item.name_en }}</Option>
+            <Select v-model="ParamsEdit" style="width:220px">
+              <Option v-for="item in SelectParams" :value="item.name_en" :key="item.name_en">{{ `${item.name_cn}（${item.name_en}）` }}</Option>
             </Select>
             <Button type="success" @click="FormulaAdd('ParamsEdit')" style="margin-left: 5px">添加</Button>
             <Select v-model="ParamsSymbol" style="width:80px;margin-left: 15px">
@@ -126,7 +127,10 @@
             value: ''
           }
         },
-        ParamsAll: [],
+        ParamsAll: {
+          BaseAll: [],
+          AssemAll: []
+        },
         SymbolData: ['+','-','*','/','(',')'],
         ParamsSymbol: '',
         ParamsEdit: '',
@@ -205,10 +209,10 @@
             align: 'center',
             key: 'id'
           },{
-            title: '公式标题',
+            title: '公式名称',
             key: 'title'
           },{
-            title: '英文标题',
+            title: '英文代号',
             key: 'title_en'
           },{
             title: '状态',
@@ -253,6 +257,12 @@
       this.GetBaseParams();
       this.InitData(this.apiUrl);
     },
+    computed:{
+      //参数
+      SelectParams(){
+        return [...this.ParamsAll.BaseAll,...this.ParamsAll.AssemAll];
+      }
+    },
     methods: {
       //循环渲染按钮
       RenderBtn(h,params,bdata){
@@ -284,7 +294,7 @@
         this.$fetch('Sysconfig/sysFormulaBList').then(d=>{
           const paramsAll = d.data;
           let fixedInit = [],dynamicInit = [];
-          this.ParamsAll = paramsAll;
+          this.ParamsAll.BaseAll = paramsAll;
           paramsAll.forEach(val=>{
             if(val.isset === 0){
               fixedInit.push(val);
@@ -339,6 +349,20 @@
           })
         })
       },
+      //提取列表公式
+      GetListFormula(id){
+        let listParams = [];
+        this.UserData.forEach(val=>{
+          const params = {
+            name_cn: val.title,
+            name_en: val.title_en
+          };
+          if(val.id !== id){
+            listParams.push(params);
+          }
+        });
+        return listParams;
+      },
       //添加配置
       AddModeModal(){
         this.$refs['ModeModal'].resetFields();
@@ -348,6 +372,7 @@
           status: 1,
           content: ''
         };
+        this.ParamsAll.AssemAll = this.GetListFormula();
         this.ModeModal.isEdit = false;
         this.ModeModal.modal = true;
       },
@@ -389,6 +414,7 @@
       },
       //修改配置
       EditOpt(row){
+        this.ParamsAll.AssemAll = this.GetListFormula(row.id);
         this.ModeModal.data = {
           title: row.title,
           title_en: row.title_en,

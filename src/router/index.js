@@ -63,7 +63,11 @@ import unifiedConfig from '@/views/config/unifiedConfig'
 import payConfig from '@/views/config/payConfig'
 
 //推广管理
+import generalizeConfig from '@/views/generalize/generalizeConfig'
 import generalizeList from '@/views/generalize/generalizeList'
+
+//第三方管理
+import cajlList from '@/views/third/cajlList'
 
 //整合所有的模块集合，用于添加路由
 const componentList = {
@@ -101,7 +105,10 @@ const componentList = {
   unifiedConfig,
   payConfig,
 
-  generalizeList
+  generalizeConfig,
+  generalizeList,
+
+  cajlList
 };
 Vue.use(Router);
 

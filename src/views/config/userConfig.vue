@@ -21,7 +21,7 @@
     </div>
     <Modal
       v-model="ModeModal.modal"
-      title="添加等级">
+      title="设置等级">
       <Form ref="ModeModal" :model="ModeModal.data" :rules="ValidateRules" label-position="right" :label-width="100">
         <FormItem label="等级：" prop="level">
           <Input v-model="ModeModal.data.level"></Input>

@@ -144,11 +144,6 @@
             align: 'center',
             key: 'orderid'
           },{
-            title: '审核状态',
-            width: '100',
-            align: 'center',
-            key: 'status'
-          },{
             title: '订单状态',
             key: 'status'
           }

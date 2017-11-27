@@ -54,7 +54,7 @@
     </div>
     <Modal
       v-model="RulesModal.modal"
-      title="添加规则">
+      title="设置规则">
       <Form ref="RulesModal" :model="RulesModal.data" :rules="ValidateRules" label-position="right" :label-width="80" class="auto-height">
         <FormItem label="启用状态：">
           <RadioGroup v-model="RulesModal.data.disable">
@@ -442,6 +442,7 @@
               ninfo.id = this.RulesModal.id;
             }
             this.UploadData(url,ninfo).then(()=>{
+              this.RulesModal.modal = false;
               this.InitData(this.apiUrl);
             });
           }

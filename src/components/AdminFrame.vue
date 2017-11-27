@@ -117,6 +117,8 @@
       this.currentpath = getLocal('path');
       if(/consumerDetails/.test(this.currentpath)){
         this.contentBg = '#f5f7f9';
+      }else{
+        this.contentBg = '#FFFFFF';
       }
       this.NowPath = this.currentpath;
       //设置打开的导航组件

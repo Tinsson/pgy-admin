@@ -1,224 +1,224 @@
 <template>
   <div id="consumer">
     <div id="listRole" v-show="!isEdit">
-    <h1 class="list-title">
-      <span class="tit-text">{{ title }}</span>
-      <Button class="tit-btn"
-              type="info"
-              icon="ios-reload"
-              size="large"
-              @click="RefreshList">刷新列表</Button>
-    </h1>
-    <div class="screen-area">
-      <Card>
-        <div class="card-tit" slot="title">
-          <h3>
-            <Icon type="ios-pricetags-outline"></Icon>
-            筛选查询
-          </h3>
-          <div class="btn-box">
-            <Button type="ghost" icon="reply" @click="ResetScreen">重置筛选</Button>
-            <Button type="success" icon="search" @click="SimpleSearch">查询结果</Button>
-            <Button type="warning" icon="clipboard" @click="SeniorShow">高级检索</Button>
+      <h1 class="list-title">
+        <span class="tit-text">{{ title }}</span>
+        <Button class="tit-btn"
+                type="info"
+                icon="ios-reload"
+                size="large"
+                @click="RefreshList">刷新列表</Button>
+      </h1>
+      <div class="screen-area">
+        <Card>
+          <div class="card-tit" slot="title">
+            <h3>
+              <Icon type="ios-pricetags-outline"></Icon>
+              筛选查询
+            </h3>
+            <div class="btn-box">
+              <Button type="ghost" icon="reply" @click="ResetScreen">重置筛选</Button>
+              <Button type="success" icon="search" @click="SimpleSearch">查询结果</Button>
+              <Button type="warning" icon="clipboard" @click="SeniorShow">高级检索</Button>
+            </div>
           </div>
-        </div>
-        <div class="opt-box">
-          <Form :model="ScreenData" inline :label-width="85">
-            <FormItem label="用户手机号：">
-              <Input v-model="ScreenData.phone" placeholder="输入手机号码"></Input>
-            </FormItem>
-            <FormItem label="芝麻分范围：">
-              <Row style="width: 200px">
-                <Col span="10">
-                  <Input v-model="ScreenData.start_zmop" placeholder="下限"></Input>
-                </Col>
-                <Col span="2" style="text-align: center">-</Col>
-                <Col span="10">
-                  <Input v-model="ScreenData.end_zmop" placeholder="上限"></Input>
-                </Col>
-              </Row>
-            </FormItem>
-            <!--<FormItem label="运营商：">
-              <RadioGroup v-model="ScreenData.rz_status">
-                <Radio label="已认证"></Radio>
-                <Radio label="未认证"></Radio>
-              </RadioGroup>
-            </FormItem>-->
-            <FormItem label="注册时间：">
-              <DatePicker type="datetimerange"
-                          placeholder="选择日期和时间"
-                          format="yyyy-MM-dd HH:mm:ss"
-                          :value="ScreenData.sim_time"
-                          @on-change="PickDate"
-                          style="width: 280px"></DatePicker>
-            </FormItem>
-            <!--<FormItem label="审核状态：">
-              <RadioGroup v-model="ScreenData.sh_status">
-                <Radio label="已认证"></Radio>
-                <Radio label="未认证"></Radio>
-              </RadioGroup>
-            </FormItem>-->
-          </Form>
-        </div>
-      </Card>
-    </div>
-    <div class="data-area">
-      <Card :padding="0">
-        <div class="card-tit" slot="title">
-          <h3>
-            <Icon type="clipboard"></Icon>
-            数据列表
-          </h3>
-          <div class="btn-box">
-            <Button type="info" size="large" icon="chatbox" @click="GroupAppOpt">群发APP消息</Button>
-            <Button type="primary" size="large" icon="archive" @click="ExportData">导出数据</Button>
+          <div class="opt-box">
+            <Form :model="ScreenData" inline :label-width="85">
+              <FormItem label="用户手机号：">
+                <Input v-model="ScreenData.phone" placeholder="输入手机号码"></Input>
+              </FormItem>
+              <FormItem label="芝麻分范围：">
+                <Row style="width: 200px">
+                  <Col span="10">
+                    <Input v-model="ScreenData.start_zmop" placeholder="下限"></Input>
+                  </Col>
+                  <Col span="2" style="text-align: center">-</Col>
+                  <Col span="10">
+                    <Input v-model="ScreenData.end_zmop" placeholder="上限"></Input>
+                  </Col>
+                </Row>
+              </FormItem>
+              <!--<FormItem label="运营商：">
+                <RadioGroup v-model="ScreenData.rz_status">
+                  <Radio label="已认证"></Radio>
+                  <Radio label="未认证"></Radio>
+                </RadioGroup>
+              </FormItem>-->
+              <FormItem label="注册时间：">
+                <DatePicker type="datetimerange"
+                            placeholder="选择日期和时间"
+                            format="yyyy-MM-dd HH:mm:ss"
+                            :value="ScreenData.sim_time"
+                            @on-change="PickDate"
+                            style="width: 280px"></DatePicker>
+              </FormItem>
+              <!--<FormItem label="审核状态：">
+                <RadioGroup v-model="ScreenData.sh_status">
+                  <Radio label="已认证"></Radio>
+                  <Radio label="未认证"></Radio>
+                </RadioGroup>
+              </FormItem>-->
+            </Form>
           </div>
-        </div>
-        <Table :columns="UserCol"
-               :data="UserData"
-               :loading="loading"
-               @on-selection-change="SelectTable"></Table>
-        <div class="page-box">
-          <Page :current="Page.cur"
-                :page-size="Page.size"
-                :total="Page.count"
-                placement="top"
-                @on-change="ChangePage"
-                @on-page-size-change="ChangeSize" show-sizer></Page>
-        </div>
-      </Card>
-    </div>
-    <Modal v-model="SeniorModal"
-           :width="600"
-           @on-ok="SeniorSearch">
-      <h2 slot="header">高级筛选</h2>
-      <Form :model="SeniorData" label-position="right" class="auto-height" :label-width="90" inline>
-        <h3 class="senior-subtit">基础数据：</h3>
-        <FormItem label="用户姓名：">
-          <Input v-model="SeniorData.name"></Input>
-        </FormItem>
-        <FormItem label="身份证号：">
-          <Input v-model="SeniorData.idcard"></Input>
-        </FormItem>
-        <FormItem label="用户手机号：">
-          <Input v-model="SeniorData.phone"></Input>
-        </FormItem>
-        <FormItem label="用户类型：">
-          <Select v-model="SeniorData.type" placeholder="请选择用户类型" style="width:162px">
-            <Option value="A">A</Option>
-            <Option value="B">B</Option>
-            <Option value="C">C</Option>
-            <Option value="D">D</Option>
-            <Option value="E">E</Option>
-          </Select>
-        </FormItem>
-        <h3 class="senior-subtit">状态检索：</h3>
-        <RadioGroup v-model="SeniorData.status_bz">
-          <div class="chose-area">
-            <Radio label="AUDIT">审核状态：</Radio>
-            <Select v-model="SeniorData.sh_status" placeholder="请选择审核状态" style="width:162px">
-              <Option value="1">仅注册</Option>
-              <Option value="2">活体识别通过</Option>
-              <Option value="3">活体识别未通过</Option>
-              <Option value="4">微信客服审核通过</Option>
-              <Option value="5">微信客服审核不通过</Option>
-              <Option value="6">同盾审核通过</Option>
-              <Option value="7">同盾审核未通过</Option>
-              <Option value="8">成安审核通过</Option>
-              <Option value="9">成安审核未通过</Option>
+        </Card>
+      </div>
+      <div class="data-area">
+        <Card :padding="0">
+          <div class="card-tit" slot="title">
+            <h3>
+              <Icon type="clipboard"></Icon>
+              数据列表
+            </h3>
+            <div class="btn-box">
+              <Button type="info" size="large" icon="chatbox" @click="GroupAppOpt">群发APP消息</Button>
+              <Button type="primary" size="large" icon="archive" @click="ExportData">导出数据</Button>
+            </div>
+          </div>
+          <Table :columns="UserCol"
+                 :data="UserData"
+                 :loading="loading"
+                 @on-selection-change="SelectTable"></Table>
+          <div class="page-box">
+            <Page :current="Page.cur"
+                  :page-size="Page.size"
+                  :total="Page.count"
+                  placement="top"
+                  @on-change="ChangePage"
+                  @on-page-size-change="ChangeSize" show-sizer></Page>
+          </div>
+        </Card>
+      </div>
+      <Modal v-model="SeniorModal"
+             :width="600"
+             @on-ok="SeniorSearch">
+        <h2 slot="header">高级筛选</h2>
+        <Form :model="SeniorData" label-position="right" class="auto-height" :label-width="90" inline>
+          <h3 class="senior-subtit">基础数据：</h3>
+          <FormItem label="用户姓名：">
+            <Input v-model="SeniorData.name"></Input>
+          </FormItem>
+          <FormItem label="身份证号：">
+            <Input v-model="SeniorData.idcard"></Input>
+          </FormItem>
+          <FormItem label="用户手机号：">
+            <Input v-model="SeniorData.phone"></Input>
+          </FormItem>
+          <FormItem label="用户类型：">
+            <Select v-model="SeniorData.type" placeholder="请选择用户类型" style="width:162px">
+              <Option value="A">A</Option>
+              <Option value="B">B</Option>
+              <Option value="C">C</Option>
+              <Option value="D">D</Option>
+              <Option value="E">E</Option>
             </Select>
-          </div>
-          <div class="chose-area">
-            <Radio label="LOAN">交易状态：</Radio>
-            <Select v-model="SeniorData.pay_status" placeholder="请选择交易状态" style="width:162px">
-              <Option value="1">未借款</Option>
-              <Option value="2">借款已还</Option>
-              <Option value="3">正常借款中</Option>
-              <Option value="4">逾期未还</Option>
-              <Option value="5">展期中</Option>
-              <Option value="6">展期逾期未还</Option>
-            </Select>
-          </div>
-          <div class="chose-area long">
-            <Radio label="CERT" class="rz-state">认证状态：</Radio>
-            <div class="option">
-              <div class="opt-box">
-                <Checkbox :indeterminate="Idtmte1"
-                          class="check-all1"
-                          :value="CheckAll1"
-                          @click.prevent.native="CheckAll(1)">基础认证</Checkbox>
-                <Checkbox :indeterminate="Idtmte2"
-                          class="check-all2"
-                          :value="CheckAll2"
-                          @click.prevent.native="CheckAll(2)" :disabled="LimitState">提额认证</Checkbox>
-              </div>
-              <div class="opt-box">
-                <div class="base">
-                  <CheckboxGroup v-model="BaseCheck" @on-change="BaseCheckChange">
-                    <Checkbox label="RG">仅注册</Checkbox>
-                    <Checkbox label="ID">身份验证</Checkbox>
-                    <Checkbox label="CB">已绑卡</Checkbox>
-                    <Checkbox label="MB">已运营商验证</Checkbox>
-                    <Checkbox label="BI">基本资料认证</Checkbox>
-                    <Checkbox label="ZM">芝麻分已认证</Checkbox>
-                  </CheckboxGroup>
+          </FormItem>
+          <h3 class="senior-subtit">状态检索：</h3>
+          <RadioGroup v-model="SeniorData.status_bz">
+            <div class="chose-area">
+              <Radio label="AUDIT">审核状态：</Radio>
+              <Select v-model="SeniorData.sh_status" placeholder="请选择审核状态" style="width:162px">
+                <Option value="1">仅注册</Option>
+                <Option value="2">活体识别通过</Option>
+                <Option value="3">活体识别未通过</Option>
+                <Option value="4">微信客服审核通过</Option>
+                <Option value="5">微信客服审核不通过</Option>
+                <Option value="6">同盾审核通过</Option>
+                <Option value="7">同盾审核未通过</Option>
+                <Option value="8">成安审核通过</Option>
+                <Option value="9">成安审核未通过</Option>
+              </Select>
+            </div>
+            <div class="chose-area">
+              <Radio label="LOAN">交易状态：</Radio>
+              <Select v-model="SeniorData.pay_status" placeholder="请选择交易状态" style="width:162px">
+                <Option value="1">未借款</Option>
+                <Option value="2">借款已还</Option>
+                <Option value="3">正常借款中</Option>
+                <Option value="4">逾期未还</Option>
+                <Option value="5">展期中</Option>
+                <Option value="6">展期逾期未还</Option>
+              </Select>
+            </div>
+            <div class="chose-area long">
+              <Radio label="CERT" class="rz-state">认证状态：</Radio>
+              <div class="option">
+                <div class="opt-box">
+                  <Checkbox :indeterminate="Idtmte1"
+                            class="check-all1"
+                            :value="CheckAll1"
+                            @click.prevent.native="CheckAll(1)">基础认证</Checkbox>
+                  <Checkbox :indeterminate="Idtmte2"
+                            class="check-all2"
+                            :value="CheckAll2"
+                            @click.prevent.native="CheckAll(2)" :disabled="LimitState">提额认证</Checkbox>
                 </div>
-                <div class="uplimit">
-                  <CheckboxGroup v-model="UpCheck" @on-change="UpCheckChange">
-                    <Checkbox label="TB" :disabled="LimitState">淘宝已认证</Checkbox>
-                    <Checkbox label="WX" :disabled="LimitState">微信客服认证</Checkbox>
-                  </CheckboxGroup>
+                <div class="opt-box">
+                  <div class="base">
+                    <CheckboxGroup v-model="BaseCheck" @on-change="BaseCheckChange">
+                      <Checkbox label="RG">仅注册</Checkbox>
+                      <Checkbox label="ID">身份验证</Checkbox>
+                      <Checkbox label="CB">已绑卡</Checkbox>
+                      <Checkbox label="MB">已运营商验证</Checkbox>
+                      <Checkbox label="BI">基本资料认证</Checkbox>
+                      <Checkbox label="ZM">芝麻分已认证</Checkbox>
+                    </CheckboxGroup>
+                  </div>
+                  <div class="uplimit">
+                    <CheckboxGroup v-model="UpCheck" @on-change="UpCheckChange">
+                      <Checkbox label="TB" :disabled="LimitState">淘宝已认证</Checkbox>
+                      <Checkbox label="WX" :disabled="LimitState">微信客服认证</Checkbox>
+                    </CheckboxGroup>
+                  </div>
                 </div>
-              </div>
-              <div class="opt-box">
-                <div class="rdo-box">
-                  <Radio v-model="RenzTypeB">并</Radio>
-                  <Radio v-model="RenzTypeQ">且</Radio>
+                <div class="opt-box">
+                  <div class="rdo-box">
+                    <Radio v-model="RenzTypeB">并</Radio>
+                    <Radio v-model="RenzTypeQ">且</Radio>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </RadioGroup>
-        <FormItem label="芝麻分范围：">
-          <Row style="width: 300px">
-            <Col span="10">
-            <Input type="text" v-model="SeniorData.start_zmop" placeholder="下限"></Input>
-            </Col>
-            <Col span="2" style="text-align: center">至</Col>
-            <Col span="10">
-            <Input type="text" v-model="SeniorData.end_zmop" placeholder="上限"></Input>
-            </Col>
-          </Row>
-        </FormItem>
-        <FormItem label="注册时间：">
-          <DatePicker type="datetimerange"
-                      placeholder="选择日期和时间"
-                      format="yyyy-MM-dd HH:mm:ss"
-                      @on-change="PickDate"
-                      :value="allTime"
-                      style="width: 280px"
-                      placement="top"></DatePicker>
-        </FormItem>
-        <FormItem label="来源渠道：">
-          <Select v-model="SeniorData.qudao" placeholder="请选择来源渠道" style="width:162px">
-            <Option value="0">未知</Option>
-            <Option value="1">Android</Option>
-            <Option value="2">IOS</Option>
-            <Option value="3">Web平台</Option>
-          </Select>
-        </FormItem>
-      </Form>
-      <p slot="footer">
-        <Button type="ghost" @click="SeniorReset">重置</Button>
-        <Button type="info" @click="SeniorSearch">提交筛选</Button>
-      </p>
-    </Modal>
-    <PushApp :modalShow="Group.AppmsgModal"
-             :InitData="SelectData"
-             :Count="Page.count"
-             @CloseModal="CloseApp"
-             @UpOver="AppOpt"></PushApp>
-  </div>
+          </RadioGroup>
+          <FormItem label="芝麻分范围：">
+            <Row style="width: 300px">
+              <Col span="10">
+              <Input type="text" v-model="SeniorData.start_zmop" placeholder="下限"></Input>
+              </Col>
+              <Col span="2" style="text-align: center">至</Col>
+              <Col span="10">
+              <Input type="text" v-model="SeniorData.end_zmop" placeholder="上限"></Input>
+              </Col>
+            </Row>
+          </FormItem>
+          <FormItem label="注册时间：">
+            <DatePicker type="datetimerange"
+                        placeholder="选择日期和时间"
+                        format="yyyy-MM-dd HH:mm:ss"
+                        @on-change="PickDate"
+                        :value="allTime"
+                        style="width: 280px"
+                        placement="top"></DatePicker>
+          </FormItem>
+          <FormItem label="来源渠道：">
+            <Select v-model="SeniorData.qudao" placeholder="请选择来源渠道" style="width:162px">
+              <Option value="0">未知</Option>
+              <Option value="1">Android</Option>
+              <Option value="2">IOS</Option>
+              <Option value="3">Web平台</Option>
+            </Select>
+          </FormItem>
+        </Form>
+        <p slot="footer">
+          <Button type="ghost" @click="SeniorReset">重置</Button>
+          <Button type="info" @click="SeniorSearch">提交筛选</Button>
+        </p>
+      </Modal>
+      <PushApp :modalShow="Group.AppmsgModal"
+               :InitData="SelectData"
+               :Count="Page.count"
+               @CloseModal="CloseApp"
+               @UpOver="AppOpt"></PushApp>
+    </div>
     <ConsumerEdit v-show="isEdit" :info="EditData" :uid="EditId" @BackOpt="ListShow"></ConsumerEdit>
   </div>
 </template>
@@ -260,7 +260,6 @@
         CheckAll2: false,
         RenzTypeB: false,
         RenzTypeQ: false,
-
         SeniorData: {
           name: '',
           phone: '',
@@ -316,7 +315,7 @@
             title: '操作',
             key: 'operation',
             align: 'center',
-            width: '220',
+            width: '250',
             render: (h, params)=>{
               return h('div',this.RenderBtn(h, params, this.BtnData));
             }
@@ -644,6 +643,10 @@
             this.UploadData('Auth/deparDel',{id: row.id});
           }
         })
+      },
+      //审核面板
+      AuditPanel(row){
+
       },
       //App推送
       GroupAppOpt(){

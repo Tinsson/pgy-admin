@@ -1,5 +1,5 @@
 <template>
-  <div id="loan-list">
+  <div id="cajl-list">
     <h1 class="list-title">
       <span class="tit-text">{{ title }}</span>
       <Button class="tit-btn"
@@ -29,29 +29,7 @@
               <Input v-model="ScreenData.phone" style="width: 120px"></Input>
             </FormItem>
             <FormItem label="身份证号：">
-              <Input v-model="ScreenData.idcard"></Input>
-            </FormItem>
-            <FormItem label="易宝流水号：">
-              <Input v-model="ScreenData.channel_id"></Input>
-            </FormItem>
-            <FormItem label="订单状态：">
-              <Select v-model="ScreenData.status" style="width:162px">
-                <Option value="0">待审核</Option>
-                <Option value="1">放款通过</Option>
-                <Option value="2">放款中</Option>
-                <Option value="3">还款中</Option>
-                <Option value="8">已还款</Option>
-                <Option value="9">拒绝</Option>
-              </Select>
-            </FormItem>
-            <FormItem label="时间：">
-              <DatePicker type="datetimerange"
-                          placeholder="选择日期和时间"
-                          format="yyyy-MM-dd HH:mm:ss"
-                          placement="bottom-end"
-                          :value="allTime"
-                          @on-change="PickDate"
-                          style="width: 280px"></DatePicker>
+              <Input v-model="ScreenData.idcard" style="width: 160px"></Input>
             </FormItem>
           </Form>
         </div>
@@ -65,12 +43,12 @@
             数据列表
           </h3>
           <div class="btn-box">
-            <Button type="primary" icon="archive" @click="ExportData">导出数据</Button>
           </div>
         </div>
         <Table :columns="UserCol"
                :data="UserData"
-               :loading="loading" ></Table>
+               :loading="loading"
+               @on-selection-change="SelectTable"></Table>
         <div class="page-box">
           <Page :current="Page.cur"
                 :page-size="Page.size"
@@ -81,27 +59,32 @@
         </div>
       </Card>
     </div>
+    <ThirdModal :modalShow="Details.modal"
+                :InitData="Details.data"
+                @CloseModal="CloseDetails"></ThirdModal>
   </div>
 </template>
 
 <script>
   import { getLocal } from '@/util/util'
+  import  ThirdModal from '@/components/infoModal/ThirdModal'
+
   export default {
-    name: 'LoanList',
+    name: 'CajlList',
+    components: {
+      ThirdModal
+    },
     data () {
       return {
-        title: '借款列表',
+        title: '诚安聚力',
+        apiUrl: 'Cajl/CajlList',
+        auth_id: '',
         loading: true,
-        allTime: [],
         //基础筛选数据
         ScreenData: {
           name: '',
           phone: '',
-          idcard: '',
-          channel_id: '',
-          status: '',
-          start_time: '',
-          end_time: '',
+          idcard: ''
         },
         UserCol: [
           {
@@ -110,48 +93,45 @@
             align: 'center'
           },{
             title: '序号',
-            width: '70',
             align: 'center',
             key: 'id'
           },{
-            title: '用户ID',
-            width: '75',
-            align: 'center',
-            key: 'uid'
-          },{
             title: '用户姓名',
-            width: '100',
             align: 'center',
-            key: 'name'
+            key: 'names'
           },{
             title: '用户手机号',
-            width: '110',
             align: 'center',
             key: 'phone'
           },{
-            title: '提现金额',
-            key: 'amount'
+            title: '身份证号',
+            key: 'idcard'
           },{
-            title: '提现请求号',
-            key: 'requestno'
+            title: '建议',
+            key: 'advice'
           },{
-            title: '请求时间',
-            width: '150',
+            title: '生成时间',
+            key: 'addtime'
+          },{
+            title: '操作',
+            key: 'operation',
             align: 'center',
-            key: 'request_time'
-          },{
-            title: '易宝流水号',
-            align: 'center',
-            key: 'orderid'
-          },{
-            title: '订单状态',
-            width: '100',
-            align: 'center',
-            key: 'status'
+            width: '330',
+            render: (h, params)=>{
+              return h('div',this.RenderBtn(h, params, this.BtnData));
+            }
           }
         ],
         UserData: [],     //表格数据
+        BtnData: [],
         RowUserData: [],  //获取的原始数据
+        //详情信息
+        Details:{
+          modal: false,
+          data: {}
+        },
+        //群选打钩后操作
+        SelectData: [],
         //初始分页信息
         Page: {
           count: 0,
@@ -161,9 +141,31 @@
       }
     },
     created(){
-      this.InitData();
+      this.auth_id = getLocal('auth_id');
+      this.InitData(this.apiUrl);
     },
     methods: {
+      //循环渲染按钮
+      RenderBtn(h,params,bdata){
+        let res = [];
+        bdata.forEach((val)=>{
+         const btn = h('Button',{
+            props: {
+              type: val.color
+            },
+            style: {
+              marginRight: '5px'
+            },
+            on: {
+              click: ()=>{
+                this[val.class](params.row)
+              }
+            },
+          },val.name);
+          res.push(btn);
+        });
+        return res;
+      },
       //去除data数据里绑定的监视器
       RemoveObserve(rowdata){
         return JSON.parse(JSON.stringify(rowdata));
@@ -173,58 +175,49 @@
         for(let key in this.ScreenData){
           this.ScreenData[key] = '';
         }
-        this.allTime = '';
       },
-      //选择时间
-      PickDate(time){
-          this.allTime = time;
+      //多选打钩绑定数据
+      SelectTable(data){
+        let idarr = [];
+        if(data.length > 0){
+          data.forEach(val=>{
+            idarr.push(val.id);
+          })
+        }
+        this.SelectData = idarr;
       },
       //查询结果
-      SimpleSearch(){
+      SimpleSearch(sign = 1){
         let sinfo = this.RemoveObserve(this.ScreenData);
-        if(this.allTime[0] !== ""){
-          sinfo.start_time = this.allTime[0];
-          sinfo.end_time = this.allTime[1];
-        }else{
-          sinfo.start_time = '';
-          sinfo.end_time = '';
-        }
-        this.InitData(sinfo).then(()=>{
-          this.$Message.success('筛选成功！')
+        this.InitData(this.apiUrl,sinfo).then(()=>{
+          if(sign){
+            this.$Message.success('筛选成功！')
+          }
         });
       },
       //初始化数据
-      InitData(params = {}){
+      InitData(url,params = {}){
         const that = this;
         this.loading = true;
+        //获取按钮信息
+        this.$fetch("Menuauth/listAuthGet",{auth_id: this.auth_id}).then((d)=>{
+          this.BtnData = d.data.operation;
+        });
         //列表数据获取
         return new Promise((resolve)=>{
-          this.$post('Loan/loanList',params).then((d)=>{
+          this.$post(url,params).then((d)=>{
             let res = d.data.list;
             this.Page.count = d.data.count;
+            this.UserData = res;
             this.RowUserData = res;
-            this.UserData = this.TransText(res,'error_msg','无');
             that.loading = false;
             resolve();
           })
         })
       },
-      /**
-       * 转换空字符串
-       * @param data 初始数据（object）
-       * @param key 转换的键值（string）
-       * @param val1 空对应的字符（string）
-       * @returns data(object);
-       */
-      TransText(data,key,val1){
-        data.forEach((val)=>{
-          val[key] = (val[key] === '')?val1:val[key];
-        });
-        return data;
-      },
       //刷新列表
       RefreshList(){
-        this.InitData().then(()=>{
+        this.InitData(this.apiUrl).then(()=>{
           this.$Message.success('刷新成功');
         });
       },
@@ -235,7 +228,6 @@
             if(d.status === 1){
               this.$Message.success(d.message);
               resolve(d.data);
-              //this.InitData();
             }else{
               this.$Message.error(d.message);
             }
@@ -243,15 +235,15 @@
             this.$Message.error('服务器繁忙，请稍后再试！');
           })
         })
-
       },
-      //导出数据
-      ExportData(){
-        let sinfo = this.RemoveObserve(this.ScreenData);
-        sinfo.expro = 1;
-        this.UploadData('Loan/loanList',sinfo).then((url)=>{
-            window.location.href = url;
+      DetailsOpt(row){
+        this.$post('Cajl/CajlShow',{id: row.id}).then(d=>{
+          this.Details.data = d.data.data;
+          this.Details.modal = true;
         });
+      },
+      CloseDetails(){
+        this.Details.modal = false;
       },
       //改变页数
       ChangePage(curpage){
@@ -259,7 +251,7 @@
           page: curpage,
           num: this.Page.size
         });
-        this.InitData(sinfo).then(()=>{
+        this.InitData(this.apiUrl,sinfo).then(()=>{
           this.Page.cur = curpage;
         })
       },
@@ -269,7 +261,7 @@
           page: 1,
           num: size
         });
-        this.InitData(sinfo).then(()=>{
+        this.InitData(this.apiUrl,sinfo).then(()=>{
           this.Page.cur = 1;
           this.Page.size = size;
         })
@@ -303,4 +295,5 @@
     flex-direction: row;
     justify-content: space-between;
   }
+
 </style>
