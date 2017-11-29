@@ -218,8 +218,15 @@
                :Count="Page.count"
                @CloseModal="CloseApp"
                @UpOver="AppOpt"></PushApp>
+      <AuditModal :modalShow="Audit.modal"
+                  :InitId="Audit.id"
+                  :AllId="Audit.allId"
+                  @CloseModal="AuditCancel"></AuditModal>
     </div>
-    <ConsumerEdit v-show="isEdit" :info="EditData" :uid="EditId" @BackOpt="ListShow"></ConsumerEdit>
+    <ConsumerEdit v-show="isEdit"
+                  :info="EditData"
+                  :uid="EditId"
+                  @BackOpt="ListShow"></ConsumerEdit>
   </div>
 </template>
 
@@ -227,12 +234,14 @@
   import { getLocal } from '@/util/util'
   import ConsumerEdit from '@/views/user/consumerEdit'
   import PushApp from '@/components/groupModal/PushApp'
+  import AuditModal from '@/components/infoModal/AuditModal'
 
   export default {
     name: 'consumerList',
     components: {
       ConsumerEdit,
-      PushApp
+      PushApp,
+      AuditModal
     },
     data () {
       return {
@@ -336,7 +345,12 @@
         },
         BtnData: [],      //按钮数据
         EditData: {},      //点击编辑后的数据
-        EditId: 0
+        EditId: 0,
+        Audit:{
+          modal: false,
+          id: '',
+          allId: ''
+        }
       }
     },
     created(){
@@ -646,7 +660,16 @@
       },
       //审核面板
       AuditPanel(row){
-
+        this.Audit.modal = true;
+        this.Audit.id = row.id;
+        let idArr = [];
+        this.RowUserData.forEach(val=>{
+          idArr.push(val.id);
+        });
+        this.Audit.allId = idArr;
+      },
+      AuditCancel(){
+        this.Audit.modal = false;
       },
       //App推送
       GroupAppOpt(){

@@ -4,7 +4,7 @@ import router from '../router'
 import { getLocal } from './util'
 
 // axios 配置
-axios.defaults.timeout = 5000;
+axios.defaults.timeout = 10000;
 /*线上的走api.xrjinrong.com，公司开发走192.168.3.93*/
 //axios.defaults.baseURL = 'http://api.xrjinrong.com/backend';
 //axios.defaults.baseURL = 'http://192.168.0.118/backend';

@@ -7,24 +7,19 @@
       <FormItem label="发送对象：">
         <div class="object-info">
           共<span class="important-num">{{CountNum}}</span>个用户
-          <p class="switch-box">
+          <!--<p class="switch-box">
             <i-switch size="large" v-model="Result.all">
               <span slot="open">全部</span>
               <span slot="close">非全</span>
             </i-switch>
-          </p>
+          </p>-->
         </div>
       </FormItem>
       <FormItem label="推送类型：">
         <RadioGroup v-model="Result.type">
           <Radio label="all">全部</Radio>
-          <Radio label="ios">
-            <Icon type="social-apple"></Icon>
-            <span>苹果</span>
-          </Radio>
-          <Radio label="android">
-            <Icon type="social-android"></Icon>
-            <span>安卓</span>
+          <Radio label="notall">
+            <span>仅勾选对象</span>
           </Radio>
         </RadioGroup>
       </FormItem>
@@ -53,7 +48,7 @@
         AppPushState: this.modalShow,
         Result: {
           regid: this.InitData,
-          type: 'all',
+          type: 'notall',
           tmplid: 0,
           all: false
         },

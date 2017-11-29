@@ -26,7 +26,9 @@
         <div class="opt-box">
           <Form :model="ScreenData" inline :label-width="85">
             <FormItem label="渠道：">
-              <Input v-model="ScreenData.src" style="width: 120px"></Input>
+              <Select v-model="ScreenData.src" style="width: 150px">
+                <Option v-for="item in SrcData" :value="item.id" :key="item.id">{{ item.title }}</Option>
+              </Select>
             </FormItem>
             <FormItem label="时间：">
               <DatePicker type="datetimerange"
@@ -115,17 +117,20 @@
           name: '历史转化',
           icon: 'android-time',
           count: 0,
-          status: 'HISTORYZH'
+          status: 'HISTORYZH',
+          cur: false
         },{
           name: '今日放款',
           icon: 'card',
           count: 0,
-          status: 'DAYLOAN'
+          status: 'DAYLOAN',
+          cur: false
         },{
           name: '历史放款',
           icon: 'android-time',
           count: 0,
-          status: 'HISTORYLOAN'
+          status: 'HISTORYLOAN',
+          cur: false
         }],
         //基础筛选数据
         ScreenData: {
@@ -165,6 +170,7 @@
           }
         ],
         UserData: [],     //表格数据
+        SrcData: [],      //渠道数据
         //群选打钩后操作
         SelectData: [],
         //初始分页信息
@@ -265,6 +271,7 @@
             let res = d.data;
             this.Page.count = d.data.count;
             this.UserData = res;
+            this.SrcData = res;
             that.loading = false;
             resolve();
           })

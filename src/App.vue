@@ -32,4 +32,23 @@ export default {
     background-color: #ff6600!important;
     color: #fff!important;
   }
+  .all-modal .ivu-modal-body{
+    padding: 0!important;
+  }
+  .all-modal .ivu-select{
+    position:relative!important;
+  }
+  .all-modal .ivu-cascader{
+    position: relative!important;
+  }
+  .all-modal .ivu-tabs-tab{
+    font-size: 16px;
+  }
+  .all-modal .ivu-tabs-bar{
+    border-color: #ffffff!important;
+  }
+  .all-modal .ivu-select-dropdown{
+    position: absolute!important;
+    top: 32px!important;
+  }
 </style>
