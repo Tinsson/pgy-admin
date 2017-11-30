@@ -1,11 +1,11 @@
 <template>
   <Modal
     v-model="State"
-    :width="530"
+    :width="this.Width + 30"
     title="背景图"
-    :styles="{top: '20px'}"
+    :styles="{top: '20px',zIndex: '10'}"
     @on-cancel="CloseBtn">
-    <img class="big-img" :src="Img" alt="">
+    <img class="big-img" :style="{maxWidth: this.Width+'px'}" :src="Img" alt="">
     <div slot="footer">
       <Button type="error" @click="CloseBtn">关闭</Button>
     </div>
@@ -19,11 +19,13 @@
       return{
         State: this.modalShow,
         Img: this.InitData,
+        Width: this.maxWidth
       }
     },
     props: {
       modalShow: Boolean,
-      InitData: String
+      InitData: String,
+      maxWidth: Number
     },
     watch: {
       modalShow(val){
@@ -31,6 +33,9 @@
       },
       InitData(val){
         this.Img = val;
+      },
+      maxWidth(val){
+        this.Width = val;
       }
     },
     methods: {
@@ -43,7 +48,6 @@
 
 <style lang="less" scoped>
   .big-img{
-    width: 500px;
     display: inline-block;
   }
 </style>

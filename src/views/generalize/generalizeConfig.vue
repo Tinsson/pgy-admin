@@ -78,6 +78,7 @@
     </Modal>
     <BigPic :modalShow="BigPic.modal"
             :InitData="BigPic.img"
+            :maxWidth="500"
             @CloseModal="CloseBigPic"></BigPic>
   </div>
 </template>

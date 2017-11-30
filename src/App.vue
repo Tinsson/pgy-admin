@@ -47,6 +47,9 @@ export default {
   .all-modal .ivu-tabs-bar{
     border-color: #ffffff!important;
   }
+  .all-modal .ivu-card-body{
+    padding: 15px!important;
+  }
   .all-modal .ivu-select-dropdown{
     position: absolute!important;
     top: 32px!important;
