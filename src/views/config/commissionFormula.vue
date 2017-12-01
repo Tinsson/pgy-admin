@@ -61,7 +61,7 @@
             <Radio :label="1">是</Radio>
           </RadioGroup>
         </FormItem>
-        <FormItem label="参数值" prop="content">
+        <FormItem label="参数值">
           <Input v-model="ParamsModal.data.content" :disabled="ParamsModal.disable"></Input>
         </FormItem>
       </Form>
