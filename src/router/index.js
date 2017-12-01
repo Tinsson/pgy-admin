@@ -61,6 +61,7 @@ import certifyConfig from '@/views/config/certifyConfig'
 import versionConfig from '@/views/config/versionConfig'
 import unifiedConfig from '@/views/config/unifiedConfig'
 import payConfig from '@/views/config/payConfig'
+import commissionFormula from '@/views/config/commissionFormula'
 
 //推广管理
 import generalizeConfig from '@/views/generalize/generalizeConfig'
@@ -104,6 +105,7 @@ const componentList = {
   versionConfig,
   unifiedConfig,
   payConfig,
+  commissionFormula,
 
   generalizeConfig,
   generalizeList,

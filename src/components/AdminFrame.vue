@@ -178,20 +178,19 @@
       '$route'(){
         const path = this.$route.path;
         this.openname[0] = '/'+path.match(/\/([^\/]*)\//)[1];
-        console.log(this.openname);
         this.currentpath = path;
         this.NowPath = path;
       },
       RightHeight(val){
-          //防抖
-          if(!this.timer){
-              this.RightHeight = val;
-              this.timer = true;
-              let that = this;
-              setTimeout(function(){
-                  that.timer = false;
-              },400)
-          }
+        //防抖
+        if(!this.timer){
+          this.RightHeight = val;
+          this.timer = true;
+          let that = this;
+          setTimeout(function(){
+              that.timer = false;
+          },400)
+        }
       }
     },
     computed: {

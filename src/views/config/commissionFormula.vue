@@ -1,5 +1,5 @@
 <template>
-  <div id="formula-config">
+  <div id="commission-formula">
     <h1 class="list-title">
       <span class="tit-text">{{ title }}</span>
     </h1>
@@ -15,11 +15,11 @@
       </div>
       <Row type="flex" justify="space-between">
         <Col :span="11">
-          <h4 class="table-tit">用户数据（不可修改参数值）</h4>
+          <h4 class="table-tit">无参数值</h4>
           <Table :columns="ParamsTable.FixedCol" :data="ParamsTable.FixedData"></Table>
         </Col>
         <Col :span="11">
-          <h4 class="table-tit">配置数据（可修改参数值）</h4>
+          <h4 class="table-tit">有参数值</h4>
           <Table :columns="ParamsTable.DynamicCol" :data="ParamsTable.DynamicData"></Table>
         </Col>
       </Row>
@@ -40,65 +40,61 @@
                :loading="loading"></Table>
       </Card>
     </div>
+    <Modal v-model="ParamsModal.modal"
+           title="设置参数">
+      <Form ref="ParamsModal" :model="ParamsModal.data" :rules="ValidateRules" label-position="right" :label-width="100">
+        <FormItem label="参数名称：" prop="name_cn">
+          <Input v-model="ParamsModal.data.name_cn"></Input>
+        </FormItem>
+        <FormItem label="参数代号：" prop="name_en">
+          <Input v-model="ParamsModal.data.name_en"></Input>
+        </FormItem>
+        <FormItem label="状态：">
+          <RadioGroup v-model="ParamsModal.data.status">
+            <Radio :label="0">关闭</Radio>
+            <Radio :label="1">开启</Radio>
+          </RadioGroup>
+        </FormItem>
+        <FormItem label="可编辑：">
+          <RadioGroup v-model="ParamsModal.data.variable" @on-change="EditJudge">
+            <Radio :label="0">否</Radio>
+            <Radio :label="1">是</Radio>
+          </RadioGroup>
+        </FormItem>
+        <FormItem label="参数值" prop="content">
+          <Input v-model="ParamsModal.data.content" :disabled="ParamsModal.disable"></Input>
+        </FormItem>
+      </Form>
+      <div slot="footer">
+        <Button type="text" @click="ModalCancel('ParamsModal')" size="large">取消</Button>
+        <Button type="primary" @click="AddOver('ParamsModal','Commission/resultparmEdit','Commission/resultparmAdd')" size="large">保存</Button>
+      </div>
+    </Modal>
     <Modal
       v-model="ModeModal.modal"
       title="设置支付公式"
       :width="650">
       <Form ref="ModeModal" :model="ModeModal.data" :rules="ValidateRules" label-position="right" :label-width="100">
-        <FormItem label="状态：">
-          <RadioGroup v-model="ModeModal.data.status">
-            <Radio :label="1">开启</Radio>
-            <Radio :label="0">关闭</Radio>
-          </RadioGroup>
-        </FormItem>
-        <FormItem label="公式标题：" prop="title">
-          <Input v-model="ModeModal.data.title"></Input>
+        <FormItem label="公式标题：" prop="title_cn">
+          <Input v-model="ModeModal.data.title_cn"></Input>
         </FormItem>
         <FormItem label="英文标题：" prop="title_en">
           <Input v-model="ModeModal.data.title_en"></Input>
         </FormItem>
         <FormItem label="公式内容：">
-          <Input v-model="ModeModal.data.content" type="textarea" :rows="2" readonly></Input>
+          <Input v-model="FormulaEditText" type="textarea" :rows="2" readonly></Input>
           <div class="chose-box">
             <Select v-model="ParamsEdit" style="width:220px">
-              <Option v-for="item in SelectParams" :value="item.name_en" :key="item.name_en">{{ `${item.name_cn}（${item.name_en}）` }}</Option>
+              <Option v-for="item in SelectParams" :value="item.id" :key="item.id">{{ `${item.name_cn}　${item.name_en}` }}</Option>
             </Select>
-            <Button type="success" @click="FormulaAdd('ParamsEdit')" style="margin-left: 5px">添加</Button>
-            <Select v-model="ParamsSymbol" style="width:80px;margin-left: 15px">
-              <Option v-for="item in SymbolData" :value="item" :key="item">{{ item }}</Option>
-            </Select>
-            <Button type="success" @click="FormulaAdd('ParamsSymbol')" style="margin-left: 5px">添加</Button>
+            <Button type="success" @click="FormulaAdd" style="margin-left: 5px">添加</Button>
             <Button type="error" @click="FormulaDel" style="margin-left: 15px">回删</Button>
           </div>
         </FormItem>
       </Form>
       <div slot="footer">
         <Button type="text" @click="ModalCancel('ModeModal')" size="large">取消</Button>
-        <Button type="primary" @click="AddOver('ModeModal','Sysconfig/sysFormulaUp','Sysconfig/sysFormulaAdd')" size="large">保存</Button>
-      </div>
-    </Modal>
-    <Modal v-model="ParamsModal.modal"
-           title="设置参数">
-      <Form ref="ParamsModal" :model="ParamsModal.data" :rules="ValidateRules" label-position="right" :label-width="100">
-        <FormItem label="参数名称：" prop="namecn">
-          <Input v-model="ParamsModal.data.namecn"></Input>
-        </FormItem>
-        <FormItem label="参数代号：" prop="nameen">
-          <Input v-model="ParamsModal.data.nameen"></Input>
-        </FormItem>
-        <FormItem label="可编辑：">
-          <RadioGroup v-model="ParamsModal.data.isset" @on-change="EditJudge">
-            <Radio :label="0">否</Radio>
-            <Radio :label="1">是</Radio>
-          </RadioGroup>
-        </FormItem>
-        <FormItem label="参数值" prop="value">
-          <Input v-model="ParamsModal.data.value" :disabled="ParamsModal.disable"></Input>
-        </FormItem>
-      </Form>
-      <div slot="footer">
-        <Button type="text" @click="ModalCancel('ParamsModal')" size="large">取消</Button>
-        <Button type="primary" @click="AddOver('ParamsModal','Sysconfig/sysFormulaBUp','Sysconfig/sysFormulaBAdd')" size="large">保存</Button>
+        <Button type="primary" @click="AddOver('ModeModal','Commission/resultsFormulaEdit','Commission/resultsFormulaAdd')" size="large">保存</Button>
       </div>
     </Modal>
   </div>
@@ -108,11 +104,11 @@
   import { getLocal } from '@/util/util'
 
   export default {
-    name: 'FormulaConfig',
+    name: 'CommissionFormula',
     data () {
       return {
-        title: '支付公式配置',
-        apiUrl: 'Sysconfig/sysFormulaList',
+        title: '业绩公式配置',
+        apiUrl: 'Commission/resultsFormulaList',
         auth_id: '',
         loading: true,
         ParamsModal:{
@@ -121,19 +117,19 @@
           id: '',
           disable: true,
           data: {
-            namecn: '',
-            nameen: '',
-            isset: 0,
-            value: ''
+            name_cn: '',
+            name_en: '',
+            status: 1,
+            variable: 0,
+            content: ''
           }
         },
         ParamsAll: {
           BaseAll: [],
           AssemAll: []
         },
-        SymbolData: ['+','-','*','/','(',')'],
-        ParamsSymbol: '',
         ParamsEdit: '',
+        FormulaEditArr: [],
         ParamsTable:{
           FixedCol:[{
             title: '参数名称',
@@ -141,6 +137,9 @@
           },{
             title: '参数代号',
             key: 'name_en'
+          },{
+            title: '状态',
+            key: 'status'
           },{
             title: '操作',
             key: 'operation',
@@ -151,10 +150,6 @@
                 color: 'primary',
                 name: '修改',
                 class: 'EditParams'
-              },{
-                color: 'error',
-                name: '删除',
-                class: 'DelParams'
               }]));
             }
           }],
@@ -167,7 +162,10 @@
             key: 'name_en'
           },{
             title: '参数值',
-            key: 'value'
+            key: 'content'
+          },{
+            title: '状态',
+            key: 'status'
           },{
             title: '操作',
             key: 'operation',
@@ -178,10 +176,6 @@
                 color: 'primary',
                 name: '修改',
                 class: 'EditParams'
-              },{
-                color: 'error',
-                name: '删除',
-                class: 'DelParams'
               }]));
             }
           }],
@@ -190,13 +184,13 @@
         TextArr:{
           status: ['关闭','开启']
         },
-        //添加用户类型
+        //添加公式内容
         ModeModal:{
           modal: false,
           isEdit: false,
           id: '',
           data: {
-            title: '',
+            title_cn: '',
             title_en: '',
             status: 1,
             content: ''
@@ -210,16 +204,16 @@
             key: 'id'
           },{
             title: '公式名称',
-            key: 'title'
+            key: 'title_cn'
           },{
             title: '英文代号',
             key: 'title_en'
           },{
-            title: '状态',
-            key: 'status'
-          },{
             title: '公式内容',
-            key: 'content'
+            key: 'zid',
+            render: (h, params)=>{
+              return h('span',this.RenderFormula(params.row.zid));
+            }
           },{
             title: '操作',
             key: 'operation',
@@ -231,7 +225,7 @@
           }
         ],
         ValidateRules:{
-          title: [
+          title_cn: [
             {required: true, message: '公式标题不能为空！'}
           ],
           title_en: [
@@ -240,10 +234,10 @@
           content: [
             {required: true, message: '公式内容不能为空！'}
           ],
-          namecn: [
+          name_cn: [
             {required: true, message: '参数名称不能为空！'}
           ],
-          nameen: [
+          name_en: [
             {required: true, message: '参数代号不能为空！'}
           ]
         },
@@ -260,7 +254,20 @@
     computed:{
       //参数
       SelectParams(){
-        return [...this.ParamsAll.BaseAll,...this.ParamsAll.AssemAll];
+        return this.ParamsAll.BaseAll;
+      },
+      FormulaEditText(){
+        let text = '';
+        if(this.FormulaEditArr.length > 0){
+          this.FormulaEditArr.forEach(id=>{
+            this.ParamsAll.BaseAll.forEach(val=>{
+              if(parseInt(id) === val.id){
+                text += val.name_en;
+              }
+            })
+          });
+        }
+        return text;
       }
     },
     methods: {
@@ -285,18 +292,32 @@
         });
         return res;
       },
+      //渲染公式
+      RenderFormula(zid){
+        let text = '';
+        if(zid.length > 0){
+          zid.split(',').forEach(id=>{
+            this.ParamsAll.BaseAll.forEach(val=>{
+              if(parseInt(id) === val.id){
+                text += val.name_en;
+              }
+            })
+          })
+        }
+        return text;
+      },
       //去除data数据里绑定的监视器
       RemoveObserve(rowdata){
         return JSON.parse(JSON.stringify(rowdata));
       },
       //获取基础参数
       GetBaseParams(){
-        this.$fetch('Sysconfig/sysFormulaBList').then(d=>{
+        this.$fetch('Commission/resultparmList').then(d=>{
           const paramsAll = d.data;
           let fixedInit = [],dynamicInit = [];
           this.ParamsAll.BaseAll = paramsAll;
           paramsAll.forEach(val=>{
-            if(val.isset === 0){
+            if(val.variable === 0){
               fixedInit.push(val);
             }else{
               dynamicInit.push(val);
@@ -318,17 +339,11 @@
         return new Promise((resolve)=>{
           this.$post(url,params).then((d)=>{
             let res = d.data;
+            if(res === null){
+              return false;
+            }
             this.RowUserData = res;
             this.UserData = res;
-            if(res.length > 0){
-              this.UserData.forEach(val=>{
-                for(let key in val){
-                  if(key in this.TextArr){
-                    val[key] = this.TextArr[key][val[key]];
-                  }
-                }
-              })
-            }
             that.loading = false;
             resolve();
           })
@@ -354,7 +369,7 @@
         let listParams = [];
         this.UserData.forEach(val=>{
           const params = {
-            name_cn: val.title,
+            name_cn: val.title_cn,
             name_en: val.title_en
           };
           if(val.id !== id){
@@ -367,11 +382,11 @@
       AddModeModal(){
         this.$refs['ModeModal'].resetFields();
         this.ModeModal.data = {
-          title: '',
+          title_cn: '',
           title_en: '',
-          status: 1,
-          content: ''
+          zid: ''
         };
+        this.FormulaEditArr = [];
         this.ParamsAll.AssemAll = this.GetListFormula();
         this.ModeModal.isEdit = false;
         this.ModeModal.modal = true;
@@ -389,6 +404,9 @@
             if(isEdit){
               ninfo.id = this[modal].id;
             }
+            if(modal === 'ModeModal'){
+              ninfo.zid = this.FormulaEditArr.join(',');
+            }
             this.UploadData(url,ninfo).then(()=>{
               this.InitData(this.apiUrl);
               this.GetBaseParams();
@@ -400,10 +418,11 @@
       AddParamModal(){
         this.$refs['ParamsModal'].resetFields();
         this.ParamsModal.data = {
-          namecn: '',
-          nameen: '',
-          isset: 0,
-          value: ''
+          name_cn: '',
+          name_en: '',
+          status: 1,
+          variable: 0,
+          content: ''
         };
         this.ParamsModal.disable = true;
         this.ParamsModal.isEdit = false;
@@ -416,11 +435,11 @@
       EditOpt(row){
         this.ParamsAll.AssemAll = this.GetListFormula(row.id);
         this.ModeModal.data = {
-          title: row.title,
+          title_cn: row.title_cn,
           title_en: row.title_en,
-          status: (row.status === '开启')?1:0,
-          content: row.content
+          zid: row.zid
         };
+        this.FormulaEditArr = row.zid.split(',');
         this.ModeModal.isEdit = true;
         this.ModeModal.id = row.id;
         this.ModeModal.modal = true;
@@ -428,13 +447,14 @@
       //修改参数
       EditParams(row){
         this.ParamsModal.data = {
-          namecn: row.name_cn,
-          nameen: row.name_en,
-          isset: row.isset,
-          value: row.isset?row.value:''
+          name_cn: row.name_cn,
+          name_en: row.name_en,
+          status: row.status === '关闭'?0:1,
+          variable: row.variable,
+          content: row.variable?row.content:''
         };
         this.ParamsModal.isEdit = true;
-        this.ParamsModal.disable = row.isset?false:true;
+        this.ParamsModal.disable = row.variable?false:true;
         this.ParamsModal.id = row.id;
         this.ParamsModal.modal = true;
       },
@@ -451,12 +471,11 @@
           }
         })
       },
-      FormulaAdd(data){
-        this.ModeModal.data.content += this[data];
+      FormulaAdd(){
+        this.FormulaEditArr.push(this.ParamsEdit);
       },
       FormulaDel(){
-        const content = this.ModeModal.data.content;
-        this.ModeModal.data.content = content.substr(0, content.length - 1);
+        this.FormulaEditArr.pop();
       }
     }
   }

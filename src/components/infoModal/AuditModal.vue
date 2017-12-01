@@ -20,23 +20,23 @@
             </div>
             <ul class="third-party">
               <li class="res-box">
-                <p class="simple pass">通过</p>
+                <p class="simple" :class="'type'+AllInfo.jiben.info.tongdun.status">{{AllInfo.jiben.info.tongdun.info}}</p>
                 <p class="title">同盾</p>
               </li>
               <li class="res-box">
-                <p class="simple reject">拒绝-黑名单用户</p>
+                <p class="simple" :class="'type'+AllInfo.jiben.info.cajl.status">{{AllInfo.jiben.info.cajl.info}}</p>
                 <p class="title">诚安</p>
               </li>
               <li class="res-box">
-                <p class="simple">未验证</p>
+                <p class="simple" :class="'type'+AllInfo.jiben.info.yunyings.status">{{AllInfo.jiben.info.yunyings.info}}</p>
                 <p class="title">运营商</p>
               </li>
               <li class="res-box">
-                <p class="simple">未验证</p>
+                <p class="simple" :class="'type'+AllInfo.jiben.info.taobao.status">{{AllInfo.jiben.info.taobao.info}}</p>
                 <p class="title active">淘宝</p>
               </li>
               <li class="res-box">
-                <p class="simple">未验证</p>
+                <p class="simple" :class="'type'+AllInfo.jiben.info.zhimafen.status">{{AllInfo.jiben.info.zhimafen.info}}</p>
                 <p class="title active">芝麻分</p>
               </li>
             </ul>
@@ -118,15 +118,15 @@
               <li class="single-line">
                 <p class="label">学历</p>
                 <p class="value">
-                  <span v-show="!IsEdit">{{EditData.info.education}}</span>
+                  <span v-show="!IsEdit">{{TextArr.edu[EditData.info.education - 1]}}</span>
                   <Select v-show="IsEdit" v-model="EditData.info.education" style="width:250px">
-                    <Option :value="10">初中</Option>
-                    <Option :value="20">高中</Option>
-                    <Option :value="30">大专</Option>
-                    <Option :value="40">本科</Option>
-                    <Option :value="50">硕士</Option>
-                    <Option :value="60">博士</Option>
-                    <Option :value="70">博士后</Option>
+                    <Option :value="1">初中</Option>
+                    <Option :value="2">高中</Option>
+                    <Option :value="3">大专</Option>
+                    <Option :value="4">本科</Option>
+                    <Option :value="5">硕士</Option>
+                    <Option :value="6">博士</Option>
+                    <Option :value="7">博士后</Option>
                   </Select>
                 </p>
               </li>
@@ -246,13 +246,13 @@
               <Input type="textarea"
                      class="value"
                      v-show="NavData.baseInfo.IsRemark"
-                     v-model="NavData.baseInfo.remark"
-                     @on-blur="RemarkOver"></Input>
+                     v-model="NavData.baseInfo.remark"></Input>
             </p>
             <div class="bot-btn">
               <Button :type="DelayBtn.type" size="large" @click="OpenDelay">{{DelayBtn.name}}</Button>
               <Button :type="BlackBtn.type" size="large" @click="AddBlack">{{BlackBtn.name}}</Button>
               <Button type="info" size="large" v-show="!NavData.baseInfo.IsRemark" @click="AddRemark">修改备注</Button>
+              <Button type="warning" size="large" v-show="NavData.baseInfo.IsRemark" @click="RemarkOver">保存备注</Button>
             </div>
           </div>
           <div class="trade-record" v-show="NavData.tradeRecord.cur">
@@ -411,7 +411,18 @@
                 </Card>
               </TabPane>
               <TabPane label="催收记录">
-
+                <Card class="card-area">
+                  <h2 class="user-title">催收数据</h2>
+                  <Table :columns="Urge.Col"
+                         :data="Urge.Data"
+                         size="large"></Table>
+                </Card>
+                <p v-show="Urge.status" class="urge-add">
+                  <span class="label">记录：</span>
+                  <Input type="textarea" v-model="Urge.content"></Input>
+                </p>
+                <Button v-show="!Urge.status" type="primary" @click="UrgeAddShow" size="large">添加记录</Button>
+                <Button v-show="Urge.status" type="warning" @click="UrgeAddOver" size="large">保存</Button>
               </TabPane>
             </Tabs>
           </div>
@@ -461,6 +472,9 @@
         State: this.modalShow,
         ID: this.InitId,
         IdArr: this.AllId,
+        TextArr: {
+          edu:['初中','高中','大专','本科','硕士','博士','博士后']
+        },
         AllAreaData: Area, //全国省市区信息集合
         AllInfo:{
           jiben:{
@@ -468,7 +482,12 @@
             huoti: [""],
             info: {
               auditorId: '',
-              collectorId: ''
+              collectorId: '',
+              tongdun: {},
+              cajl: {},
+              yunyings: {},
+              taobao: {},
+              zhimafen: {}
             },
             renz: ''
           },
@@ -555,14 +574,32 @@
             title: '状态',
             key: 'status'
           },{
-            title: '时间',
+            title: '生成时间',
             key: 'create_at'
           }],
           Data: []
         },
         Audit:{
           Col: [{
-            title: '时间',
+            title: '类型',
+            key: 'type'
+          },{
+            title: '状态',
+            key: 'status'
+          },{
+            title: '生成时间',
+            key: 'create_at'
+          }],
+          Data: []
+        },
+        Urge:{
+          status: false,
+          content: '',
+          Col: [{
+            title: '记录',
+            key: 'content'
+          },{
+            title: '生成时间',
             key: 'create_at'
           }],
           Data: []
@@ -676,6 +713,8 @@
         this.$fetch('User/editUser',{uid: id}).then(edit=>{
           this.$fetch('User/getInfo',{uid: id}).then(info=>{
             this.EditData = edit.data;
+            this.EditData.uid = this.ID;
+            this.EditData.info.uid = this.ID;
             this.Limit.value = edit.data.info.credit_limit
             this.NavData.baseInfo.remark = edit.data.info.remark;
 
@@ -687,6 +726,7 @@
             this.StateText(this.AllInfo.loan.hk_list);
             this.Authorize.Data = this.AllInfo.operation.user.authorize;
             this.Audit.Data = this.AllInfo.operation.user.audit;
+            this.Urge.Data = this.AllInfo.operation.collection.inputlist;
             this.BindHidden();
             this.loading = false;
           });
@@ -702,7 +742,9 @@
       },
       SubOpt(){
         const allinfo = JSON.stringify(this.EditData);
-        this.UploadData('User/editUserQuery',{_post: allinfo});
+        this.UploadData('User/editUserQuery',{_post: allinfo}).then(()=>{
+          this.IsEdit = false;
+        });
       },
       EditCancel(){
         this.IsEdit = false;
@@ -816,6 +858,22 @@
       },
       CloseBigPic(){
         this.BigPic.modal = false;
+      },
+      UrgeAddShow(){
+        this.Urge.status = true;
+      },
+      UrgeAddOver(){
+        const data = {
+          uid: this.ID,
+          content: this.Urge.content
+        };
+        this.UploadData('User/addCollection',data).then((d)=>{
+          this.Urge.status = false;
+          this.Urge.Data.push({
+            content: this.Urge.content,
+            create_at: d.date
+          });
+        })
       }
     }
   }
@@ -882,10 +940,10 @@
           color: #fff;
           border-radius: 5px;
           background-color: #919191;
-          &.pass{
+          &.type1{
             background-color: #00a854;
           }
-          &.reject{
+          &.type2{
             background-color: #d73435;
           }
         }
@@ -996,6 +1054,9 @@
   }
   .trade-record,.opt-record{
     padding: 5px 10px 15px;
+  }
+  .urge-add{
+    padding-bottom: 10px;
   }
   .count-box{
     border: 1px solid #666;

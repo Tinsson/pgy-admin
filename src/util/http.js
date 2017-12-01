@@ -5,9 +5,9 @@ import { getLocal } from './util'
 
 // axios 配置
 axios.defaults.timeout = 10000;
-/*线上的走api.xrjinrong.com，公司开发走192.168.3.93*/
+/*线上的走api.xrjinrong.com，公司开发走www.zzdd.com*/
 //axios.defaults.baseURL = 'http://api.xrjinrong.com/backend';
-//axios.defaults.baseURL = 'http://192.168.0.118/backend';
+//axios.defaults.baseURL = 'http://172.18.0.91/backend';
 axios.defaults.baseURL = 'http://www.zzdd.com/backend';
 
 // http request 拦截器
@@ -25,7 +25,6 @@ axios.interceptors.request.use(
         router.push({path: '/login'});
       }
     }
-
     return config;
   },
   err => {
