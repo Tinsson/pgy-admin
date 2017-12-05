@@ -395,7 +395,6 @@
         this.Group.SmsModal = false;
       },
       SmsOpt(info){
-        console.log(info);
         this.Group.SmsModal = false;
       },
       //App推送
@@ -408,7 +407,6 @@
       AppOpt(info){
         let sinfo = this.RemoveObserve(info);
         sinfo.regid = (sinfo.type.length > 0)?sinfo.regid.join(','):'';
-        console.log(sinfo);
         this.UploadData('Push/pushs',sinfo).then(()=>{
           this.Group.AppmsgModal = false;
         });
@@ -419,7 +417,6 @@
         let sinfo = this.RemoveObserve(this.ScreenData);
         sinfo.expro = 1;
         this.UploadData('Collection/overdueList',sinfo).then((url)=>{
-          console.log(url);
           //window.location.href = url;
         });
       },

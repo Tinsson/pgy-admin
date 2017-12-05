@@ -31,9 +31,6 @@
             <FormItem label="身份证号：">
               <Input v-model="ScreenData.idcard"></Input>
             </FormItem>
-            <FormItem label="易宝流水号：">
-              <Input v-model="ScreenData.channel_id"></Input>
-            </FormItem>
             <FormItem label="绑卡请求号：">
               <Input v-model="ScreenData.requestno"></Input>
             </FormItem>
@@ -91,7 +88,7 @@
           name: '',
           phone: '',
           idcard: '',
-          channel_id: '',
+          //channel_id: '',
           requestno: '',
           start_time: '',
           end_time: '',

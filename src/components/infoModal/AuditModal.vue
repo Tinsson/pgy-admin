@@ -146,16 +146,6 @@
                   </p>
                 </li>
               </div>
-              <li v-for="item in EditData.rz_info" class="single-line">
-                <p class="label">{{ item.type_name }}</p>
-                <p class="value">
-                  <span v-show="!IsEdit">{{item.pass_at}}</span>
-                  <Select v-show="IsEdit" v-model="item.pass_at" style="width:250px">
-                    <Option :value="1">通过</Option>
-                    <Option :value="0">未通过</Option>
-                  </Select>
-                </p>
-              </li>
               <li class="single-line">
                 <p class="label">审核员</p>
                 <p class="value">
@@ -471,6 +461,7 @@
         loading: true,
         State: this.modalShow,
         ID: this.InitId,
+        Unique: this.UniqueId,
         IdArr: this.AllId,
         TextArr: {
           edu:['初中','高中','大专','本科','硕士','博士','博士后']
@@ -526,7 +517,6 @@
             address: '',
             remark: ''
           },
-          rz_info: [],
           lianxiren: [],
           auditor: [],
           collector:[]
@@ -613,6 +603,7 @@
     props: {
       modalShow: Boolean,
       InitId: [String, Number],
+      UniqueId: [String, Number],
       AllId: [Array,String]
     },
     watch: {
@@ -625,6 +616,9 @@
       },
       InitId(val){
         this.ID = val;
+      },
+      UniqueId(val){
+        this.Unique = val;
       },
       AllId(val){
         this.IdArr = val;
@@ -647,7 +641,7 @@
         let cur = 0;
         if(this.IdArr.length > 0){
           this.IdArr.forEach((val,index)=>{
-            if(val === this.ID) cur = index + 1;
+            if(val === this.UniqueId) cur = index + 1;
           });
         }
         return cur;

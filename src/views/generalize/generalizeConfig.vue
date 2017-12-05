@@ -59,10 +59,10 @@
         <FormItem label="渠道名称：" prop="title">
           <Input v-model="ModeModal.data.title"></Input>
         </FormItem>
-        <FormItem label="验证码按钮颜色：">
+        <FormItem label="按钮字体颜色：">
           <ColorPicker v-model="ModeModal.data.code_color" />
         </FormItem>
-        <FormItem label="提交按钮颜色：">
+        <FormItem label="按钮背景颜色：">
           <ColorPicker v-model="ModeModal.data.submit_color" />
         </FormItem>
         <FormItem label="背景图：">
@@ -85,6 +85,7 @@
 
 <script>
   import { getLocal } from '@/util/util'
+  import Clipboard from 'clipboard';
   import BigPic from '@/components/infoModal/BigPic'
 
   export default {
@@ -98,6 +99,7 @@
         apiUrl: 'Promote/promoteList',
         auth_id: '',
         loading: true,
+        ClipBoard: {},
         picloading: true,
         PicCol:[
           {
@@ -153,7 +155,25 @@
             title: '更新时间',
             key: 'update_at'
           },{
-            title: '验证码按钮颜色',
+            title: '推广链接',
+            key: 'extend_url',
+            render: (h, params)=>{
+              const Url = window.location.origin + window.location.pathname + '#/extend?code=' + params.row.codebase;
+              return h('div',{
+                'class': {
+                  clipBtn : true
+                },
+                style:{
+                  cursor: 'pointer',
+                  color: '#d73435'
+                },
+                attrs:{
+                  src: Url
+                }
+              },'复制链接')
+            }
+          },{
+            title: '按钮字体颜色',
             key: 'code_color',
             render: (h, params)=>{
               return h('div',[h('span',{
@@ -168,7 +188,7 @@
               }),h('span',params.row.code_color)])
             }
           },{
-            title: '提交按钮颜色',
+            title: '按钮背景颜色',
             key: 'sub_color',
             render: (h, params)=>{
               return h('div',[h('span',{
@@ -261,6 +281,20 @@
       this.auth_id = getLocal('auth_id');
       this.InitPic();
       this.InitData(this.apiUrl,{},1);
+    },
+    mounted(){
+      //剪切板功能
+      this.ClipBoard = new Clipboard('.clipBtn',{
+        text: function(elm){
+          return elm.getAttribute('src');
+        }
+      });
+      this.ClipBoard.on('success',(e)=>{
+        this.$Message.success('链接粘贴成功！');
+      })
+    },
+    destroyed() {
+      this.ClipBoard.destroy();
     },
     computed:{
       ShowImg(){

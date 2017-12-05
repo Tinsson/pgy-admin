@@ -31,9 +31,6 @@
             <FormItem label="身份证号：">
               <Input v-model="ScreenData.idcard"></Input>
             </FormItem>
-            <FormItem label="易宝流水号：">
-              <Input v-model="ScreenData.channel_id"></Input>
-            </FormItem>
             <FormItem label="绑卡请求号：">
               <Input v-model="ScreenData.requestno"></Input>
             </FormItem>
@@ -87,7 +84,7 @@
           name: '',
           phone: '',
           idcard: '',
-          channel_id: '',
+          //channel_id: '',
           requestno: '',
           start_time: '',
           end_time: ''
@@ -127,11 +124,7 @@
             title: '请求时间',
             width: '150',
             align: 'center',
-            key: 'create_at'
-          },{
-            title: '易宝流水号',
-            align: 'center',
-            key: 'orderid'
+            key: 'createTime'
           },{
             title: '绑卡状态',
             width: '100',
@@ -141,7 +134,7 @@
             title: '错误信息',
             width: '150',
             align: 'center',
-            key: 'error_msg'
+            key: 'returnMsg'
           },{
             title: '银行卡号',
             key: 'cardno'

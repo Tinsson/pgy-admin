@@ -32,6 +32,10 @@ export default {
     background-color: #ff6600!important;
     color: #fff!important;
   }
+  .ivu-table .super-admin td{
+    background-color: #4ba2f8!important;
+    color: #FFF!important;
+  }
   .all-modal .ivu-modal-body{
     padding: 0!important;
   }

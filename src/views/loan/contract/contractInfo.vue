@@ -121,7 +121,6 @@
       this.InitData({id: this.cid}).then(()=>{
         this.baseTable.forEach(val=>{
           if('key' in val){
-            console.log(val.key);
             val.value = this.UserData[val.key];
           }
         });

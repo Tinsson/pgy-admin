@@ -220,6 +220,7 @@
                @UpOver="AppOpt"></PushApp>
       <AuditModal :modalShow="Audit.modal"
                   :InitId="Audit.id"
+                  :UniqueId="Audit.id"
                   :AllId="Audit.allId"
                   @CloseModal="AuditCancel"></AuditModal>
     </div>
@@ -324,7 +325,7 @@
             title: '操作',
             key: 'operation',
             align: 'center',
-            width: '250',
+            width: '150',
             render: (h, params)=>{
               return h('div',this.RenderBtn(h, params, this.BtnData));
             }
@@ -384,39 +385,19 @@
       RenderBtn(h,params,bdata){
         let res = [];
         bdata.forEach((val)=>{
-          let btn = '';
-          if(val.class === 'DetailsOpt'){
-            let innerbtn = h('Button',{
-              props: {
-                type: val.color
-              },
-              style: {
-                marginRight: '5px'
+          const btn = h('Button',{
+            props: {
+              type: val.color
+            },
+            style: {
+              marginRight: '5px'
+            },
+            on: {
+              click: ()=>{
+                this[val.class](params.row)
               }
-            },val.name);
-            btn = h('router-link',{
-              props: {
-                  to: '/consumerDetails?id=' + params.row.id
-              },
-              attrs: {
-                  target: '_blank'
-              }
-            },[innerbtn]);
-          }else{
-            btn = h('Button',{
-              props: {
-                type: val.color
-              },
-              style: {
-                marginRight: '5px'
-              },
-              on: {
-                click: ()=>{
-                  this[val.class](params.row)
-                }
-              },
-            },val.name);
-          }
+            },
+          },val.name);
           res.push(btn);
         });
         return res;
@@ -643,9 +624,18 @@
           this.isEdit = false;
         });
       },
-      //查看用户
+      //审核面板
       DetailsOpt(row){
-
+        this.Audit.modal = true;
+        this.Audit.id = row.id;
+        let idArr = [];
+        this.RowUserData.forEach(val=>{
+          idArr.push(val.id);
+        });
+        this.Audit.allId = idArr;
+      },
+      AuditCancel(){
+        this.Audit.modal = false;
       },
       //删除用户
       Delopt(row){
@@ -657,19 +647,6 @@
             this.UploadData('Auth/deparDel',{id: row.id});
           }
         })
-      },
-      //审核面板
-      AuditPanel(row){
-        this.Audit.modal = true;
-        this.Audit.id = row.id;
-        let idArr = [];
-        this.RowUserData.forEach(val=>{
-          idArr.push(val.id);
-        });
-        this.Audit.allId = idArr;
-      },
-      AuditCancel(){
-        this.Audit.modal = false;
       },
       //App推送
       GroupAppOpt(){

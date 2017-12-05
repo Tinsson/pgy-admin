@@ -31,9 +31,9 @@
             <FormItem label="身份证号：">
               <Input v-model="ScreenData.idcard"></Input>
             </FormItem>
-            <FormItem label="易宝流水号：">
+            <!--<FormItem label="易宝流水号：">
               <Input v-model="ScreenData.channel_id"></Input>
-            </FormItem>
+            </FormItem>-->
             <FormItem label="订单状态：">
               <Select v-model="ScreenData.status" style="width:162px">
                 <Option value="0">待审核</Option>
@@ -98,7 +98,7 @@
           name: '',
           phone: '',
           idcard: '',
-          channel_id: '',
+          //channel_id: '',
           status: '',
           start_time: '',
           end_time: '',
@@ -139,11 +139,11 @@
             width: '150',
             align: 'center',
             key: 'request_time'
-          },{
+          },/*{
             title: '易宝流水号',
             align: 'center',
             key: 'orderid'
-          },{
+          },*/{
             title: '订单状态',
             width: '100',
             align: 'center',

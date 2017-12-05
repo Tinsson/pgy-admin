@@ -8,6 +8,7 @@
     <div class="data-area">
       <Table :columns="UserCol"
              size="large"
+             :row-class-name="IsSuperAdmin"
              :data="UserData"
              :loading="loading"></Table>
     </div>
@@ -184,7 +185,9 @@
             width: '280',
             render: (h, params)=>{
               let BtnArr = [];
-              if(this.BtnData.length < 4){
+              if(params.row.id === 1){
+                BtnArr = '超级管理员，无法操作'
+              }else if(this.BtnData.length < 4){
                 BtnArr = this.RenderBtn(h, params, this.BtnData);
               }else{
                 BtnArr = this.RenderBtn(h, params, this.BtnData.slice(0,2));
@@ -361,6 +364,14 @@
           this.BtnData = d.data.operation;
         })
       },
+      //判断超级管理员
+      IsSuperAdmin(row){
+        if(row.id === 1){
+          return 'super-admin';
+        }else{
+          return '';
+        }
+      },
       //刷新列表
       RefreshList(){
         this.InitData(()=>{
@@ -467,7 +478,6 @@
         }else{
           this.InitRole.check_id = [];
         }
-        console.log(this.InitRole.check_id);
         this.AssignRoleModal = true;
       },
       CloseRole(){
@@ -516,5 +526,4 @@
   .operate-box{
     padding: 10px 0 20px;
   }
-
 </style>

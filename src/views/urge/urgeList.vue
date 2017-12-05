@@ -93,6 +93,11 @@
              :Count="Page.count"
              @CloseModal="CloseApp"
              @UpOver="AppOpt"></PushApp>
+    <AuditModal :modalShow="Audit.modal"
+                :InitId="Audit.id"
+                :UniqueId="Audit.unique"
+                :AllId="Audit.allId"
+                @CloseModal="AuditCancel"></AuditModal>
   </div>
 </template>
 
@@ -100,12 +105,14 @@
   import { getLocal } from '@/util/util'
   import GroupSms from '@/components/groupModal/GroupSms'
   import PushApp from '@/components/groupModal/PushApp'
+  import AuditModal from '@/components/infoModal/AuditModal'
 
   export default {
     name: 'UrgeList',
     components:{
       GroupSms,
-      PushApp
+      PushApp,
+      AuditModal
     },
     data () {
       return {
@@ -207,6 +214,13 @@
           count: 0,
           cur: 1,
           size: 20,
+        },
+        //审核面板
+        Audit:{
+          modal: false,
+          id: '',
+          unique: '',
+          allId: ''
         }
       }
     },
@@ -220,24 +234,7 @@
         let res = [];
         bdata.forEach((val)=>{
           let btn = '';
-          if(val.class === 'DetailsOpt'){
-            let innerbtn = h('Button',{
-              props: {
-                type: val.color
-              },
-              style: {
-                marginRight: '5px'
-              }
-            },val.name);
-            btn = h('router-link',{
-              props: {
-                to: '/consumerDetails?id=' + params.row.id
-              },
-              attrs: {
-                target: '_blank'
-              }
-            },[innerbtn]);
-          }else if(val.class === 'DelayOpt'){
+          if(val.class === 'DelayOpt'){
             let name = params.row.allow_delay?'已展期':'展期';
             let color = params.row.allow_delay?'default':val.color;
             btn = h('Button',{
@@ -358,7 +355,6 @@
         return new Promise((resolve)=>{
           this.$post(url,params).then((d)=>{
             let res = d.data.list;
-            console.table(res);
             if(isinit){
               this.CountData[0].count = d.data.today_count;
               this.CountData[1].count = d.data.yuqi_count;
@@ -384,9 +380,21 @@
       },
       //刷新列表
       RefreshList(){
-        this.InitData('Collection/CollectionList',{},1).then(()=>{
-          this.$Message.success('刷新成功');
+        this.SimpleSearch(0);
+      },
+      //审核面板
+      DetailsOpt(row){
+        this.Audit.modal = true;
+        this.Audit.id = row.id;
+        this.Audit.unique = row.loan_id;
+        let idArr = [];
+        this.RowUserData.forEach(val=>{
+          idArr.push(val.loan_id);
         });
+        this.Audit.allId = idArr;
+      },
+      AuditCancel(){
+        this.Audit.modal = false;
       },
       //标记记录
       TagClassName(row){
@@ -452,7 +460,6 @@
         this.Group.SmsModal = false;
       },
       SmsOpt(info){
-        console.log(info);
         this.Group.SmsModal = false;
       },
       //App推送
@@ -465,7 +472,6 @@
       AppOpt(info){
         let sinfo = this.RemoveObserve(info);
         sinfo.regid = (sinfo.type.length > 0)?sinfo.regid.join(','):'';
-        console.log(sinfo);
         this.UploadData('Push/pushs',sinfo).then(()=>{
           this.Group.AppmsgModal = false;
         });

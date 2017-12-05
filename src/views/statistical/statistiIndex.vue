@@ -1,46 +1,91 @@
 <template>
-  <div id="template-edit">
-    <h1 class="list-title">
-      <span class="tit-text">{{ title }}</span>
-    </h1>
-    <div class="data-area">
-      <Card :padding="0">
-        <div class="card-tit" slot="title">
-          <h3>
-            <Icon type="clipboard"></Icon>
-            数据列表
-          </h3>
-          <div class="btn-box">
-            <Button type="warning" size="large" icon="chatbox" @click="AddModeModal">添加模板</Button>
+  <div id="statistical-index">
+    <Row :gutter="20">
+      <Col span="6">
+        <Card>
+          <h2 class="card-title">总注册数</h2>
+          <p class="card-number">{{ CountData.TotalRegis }}</p>
+          <div class="card-content">
+            <p class="info-txt">
+              <span class="half">
+                <span class="label"></span>
+                <span class="value"></span>
+              </span>
+            </p>
           </div>
-        </div>
-        <Table :columns="UserCol"
-               :data="UserData"
-               :loading="loading"></Table>
-      </Card>
-    </div>
-    <Modal
-      v-model="ModeModal.modal"
-      title="添加模板">
-      <Form ref="ModeModal" :model="ModeModal.data" :rules="ValidateRules" label-position="right" :label-width="80">
-        <FormItem label="启用状态：">
-          <RadioGroup v-model="ModeModal.data.status">
-            <Radio :label="0">已关闭</Radio>
-            <Radio :label="1">已开启</Radio>
-          </RadioGroup>
-        </FormItem>
-        <FormItem label="名称：" prop="title">
-          <Input v-model="ModeModal.data.title"></Input>
-        </FormItem>
-        <FormItem label="内容：" prop="content">
-          <Input v-model="ModeModal.data.content" type="textarea" :autosize="{minRows: 3,maxRows: 5}"></Input>
-        </FormItem>
-      </Form>
-      <div slot="footer">
-        <Button type="text" @click="ModalCancel" size="large">取消</Button>
-        <Button type="primary" @click="AddOver" size="large">保存</Button>
-      </div>
-    </Modal>
+          <div class="card-footer">
+            <span>总绑卡数</span>
+            <span class="value">{{ CountData.BindCardNum }}</span>
+          </div>
+        </Card>
+      </Col>
+      <Col span="6">
+        <Card>
+          <h2 class="card-title">借款总金额</h2>
+          <p class="card-number">¥{{ CountData.LoanAmount }}</p>
+          <div class="card-content">
+            <p class="info-txt">
+              <span class="half">
+                <span class="label">借款总笔数</span>
+                <span class="value">{{CountData.RequestLoanBishu}}</span>
+              </span>
+            </p>
+          </div>
+          <div class="card-footer">
+            <span>借款平均金额</span>
+            <span class="value">¥{{ AveLoan }}</span>
+          </div>
+        </Card>
+      </Col>
+      <Col span="6">
+        <Card>
+          <h2 class="card-title">还款总金额</h2>
+          <p class="card-number">¥{{ CountData.HuankuanAllAmount }}</p>
+          <div class="card-content">
+            <p class="info-txt">
+                <span class="half">
+                  <span class="label">还款总笔数</span>
+                  <span class="value">{{CountData.HuankuanBishu}}</span>
+                </span>
+            </p>
+          </div>
+          <div class="card-footer">
+            <span>还款平均金额</span>
+            <span class="value">¥{{AveRepay}}</span>
+          </div>
+        </Card>
+      </Col>
+      <Col span="6">
+        <Card>
+          <h2 class="card-title">展期总金额</h2>
+          <p class="card-number">¥{{ CountData.ZhanqiAllAmount }}</p>
+          <div class="card-content">
+            <p class="info-txt">
+
+            </p>
+          </div>
+          <div class="card-footer">
+            <span></span>
+            <span class="value"></span>
+          </div>
+        </Card>
+      </Col>
+    </Row>
+    <Row :gutter="14" class="pie-box">
+      <Col span="13">
+        <Card>
+          <p ref="PieTitle" class="chart-tit" slot="title">身份证识别及活体识别</p>
+          <div id="pieChart1" class="chart-out" :style="{width: PieWidth+'px',height: PieWidth+'px'}"></div>
+          <div id="pieChart2" class="chart-out" :style="{width: PieWidth+'px',height: PieWidth+'px'}"></div>
+        </Card>
+      </Col>
+      <Col span="11">
+        <Card>
+          <p ref="BarTitle" class="chart-tit" slot="title">第三方认证</p>
+          <div id="BarChart" :style="{width: BarWidth+'px',height: PieWidth+'px'}"></div>
+        </Card>
+      </Col>
+    </Row>
   </div>
 </template>
 
@@ -48,193 +93,189 @@
   import { getLocal } from '@/util/util'
 
   export default {
-    name: 'TemplateEdit',
+    name: 'Statistical',
     data () {
       return {
-        title: '模板编辑',
-        apiUrl: 'Autopush/modelList',
+        title: '统计首页',
+        apiUrl: 'Statistical/statiIndex',
         auth_id: '',
         loading: true,
-        TextArr:{
-          status: ['关闭','开启']
+        CountData: {
+          TotalRegis: 0,
+          LoanAmount: 0,
+          RequestLoanBishu: 0,
+          HuankuanAllAmount: 0,
+          HuankuanBishu: 0,
+          ZhanqiAllAmount: 0,
+          IdcardNum: 0,
+          LivingNum: 0,
+          BindCardNum: 0
         },
-        //添加规则
-        ModeModal:{
-          modal: false,
-          isEdit: false,
-          id: '',
-          data: {
-            status: 1,
-            title: '',
-            content: ''
-          }
-        },
-        UserCol: [
-          {
-            title: '序号',
-            width: '70',
-            align: 'center',
-            key: 'id'
-          },{
-            title: '名称',
-            key: 'title'
-          },{
-            title: '状态',
-            key: 'status'
-          },{
-            title: '操作',
-            key: 'operation',
-            align: 'center',
-            width: '330',
-            render: (h, params)=>{
-              return h('div',this.RenderBtn(h, params, this.BtnData));
+        PieWidth: '',
+        PieOption1:{
+          title : {
+            text: '身份证识别比例',
+            subtext: '',
+            x:'center'
+          },
+          tooltip : {
+            trigger: 'item',
+            formatter: "{a} <br/>{b} : {c} ({d}%)"
+          },
+          legend: {
+            orient: 'vertical',
+            left: 'left',
+            data: ['识别','未识别']
+          },
+          series : [
+            {
+              name: '识别情况',
+              type: 'pie',
+              radius : '55%',
+              center: ['50%', '60%'],
+              data:[
+                {value: 2, name:'识别', itemStyle:{normal:{color:'rgb(106,164,231)'}}},
+                {value: 10, name:'未识别', itemStyle:{normal:{color:'rgb(239,145,74)'}}}
+              ],
+              itemStyle: {
+                emphasis: {
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+              }
             }
-          }
-        ],
-        ValidateRules:{
-          title: [
-            {required: true, message: '名称不能为空！'}
-          ],
-          content: [
-            {required: true, message: '内容不能为空！'}
           ]
         },
-        UserData: [],     //表格数据
-        RowUserData: [],  //获取的原始数据
-        BtnData: []
+        PieOption2:{
+          title : {
+            text: '活体识别比例',
+            subtext: '',
+            x:'center'
+          },
+          tooltip : {
+            trigger: 'item',
+            formatter: "{a} <br/>{b} : {c} ({d}%)"
+          },
+          legend: {
+            orient: 'vertical',
+            left: 'left',
+            data: ['识别','未识别']
+          },
+          series : [
+            {
+              name: '识别情况',
+              type: 'pie',
+              radius : '55%',
+              center: ['50%', '60%'],
+              data:[
+                {value: 0, name:'识别', itemStyle:{normal:{color:'rgb(108,108,227)'}}},
+                {value: 0, name:'未识别', itemStyle:{normal:{color:'rgb(231,66,72)'}}}
+              ],
+              itemStyle: {
+                emphasis: {
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+              }
+            }
+          ]
+        },
+        BarWidth: '',
+        BarOption:{
+          title : {
+            text: '第三方认证情况一览表',
+            subtext: '',
+            x:'center'
+          },
+          color: ['#3398DB'],
+          tooltip : {
+            trigger: 'axis',
+            axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+              type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+            }
+          },
+          grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+          },
+          xAxis : [
+            {
+              type : 'category',
+              data : ['运营商认证', '反欺诈认证', '芝麻认证', '淘宝认证', '微信认证'],
+              axisTick: {
+                alignWithLabel: true
+              }
+            }
+          ],
+          yAxis : [
+            {
+              type : 'value'
+            }
+          ],
+          series : [
+            {
+              name:'认证数',
+              type:'bar',
+              barWidth: '60%',
+              data:[0, 0, 0, 0,0]
+            }
+          ]
+        }
       }
     },
     created(){
       this.auth_id = getLocal('auth_id');
+    },
+    mounted(){
+      this.PieWidth = (this.$refs['PieTitle'].offsetWidth / 2) - 10;
+      this.BarWidth = (this.$refs['BarTitle'].offsetWidth);
       this.InitData(this.apiUrl);
     },
+    computed: {
+      AveLoan(){
+        let res = this.CountData.LoanAmount / this.CountData.RequestLoanBishu;
+        return res.toFixed(2);
+      },
+      AveRepay(){
+        let res = this.CountData.HuankuanAllAmount / this.CountData.HuankuanBishu
+        return res.toFixed(2);
+      }
+    },
     methods: {
-      //循环渲染按钮
-      RenderBtn(h,params,bdata){
-        let res = [];
-        bdata.forEach((val)=>{
-          const btn = h('Button',{
-            props: {
-              type: val.color
-            },
-            style: {
-              marginRight: '5px'
-            },
-            on: {
-              click: ()=>{
-                this[val.class](params.row)
-              }
-            },
-          },val.name);
-          res.push(btn);
-        });
-        return res;
-      },
-      //去除data数据里绑定的监视器
-      RemoveObserve(rowdata){
-        return JSON.parse(JSON.stringify(rowdata));
-      },
       //初始化数据
       InitData(url,params = {}){
-        const that = this;
         this.loading = true;
-        //获取按钮信息
-        this.$fetch('Menuauth/listAuthGet',{auth_id: this.auth_id}).then((d)=>{
-          this.BtnData = d.data.operation;
-        });
         //列表数据获取
         return new Promise((resolve)=>{
           this.$post(url,params).then((d)=>{
             let res = d.data;
-            this.RowUserData = res;
-            this.UserData = res;
-            if(res.length > 0){
-              this.UserData.forEach(val=>{
-                for(let key in val){
-                  if(key in this.TextArr){
-                    val[key] = this.TextArr[key][val[key]];
-                  }
-                }
-              })
-            }
-            that.loading = false;
+            this.PieOption1.series[0].data[0].value = res.IdcardNum;
+            this.PieOption1.series[0].data[1].value = res.TotalRegis - res.IdcardNum;
+            this.PieOption2.series[0].data[0].value = res.LivingNum;
+            this.PieOption2.series[0].data[1].value = res.TotalRegis - res.LivingNum;
+            this.BarOption.series[0].data[0] = res.YunyingsAuditNum;
+            this.BarOption.series[0].data[1] = res.FraudNum;
+            this.BarOption.series[0].data[2] = res.ZmopNum;
+            this.BarOption.series[0].data[3] = res.TaobaoNum;
+            this.BarOption.series[0].data[4] = res.WechatNum;
+            this.DrawChart();
+            this.CountData = res;
+            this.loading = false;
             resolve();
           })
         })
       },
-      //提交信息操作
-      UploadData(url,info){
-        return new Promise((resolve)=>{
-          this.$post(url,info).then((d)=>{
-            if(d.status === 1){
-              this.$Message.success(d.message);
-              resolve(d.data);
-            }else{
-              this.$Message.error(d.message);
-            }
-          }).catch((err)=>{
-            this.$Message.error('服务器繁忙，请稍后再试！');
-          })
-        })
-      },
-      //添加模板
-      AddModeModal(){
-        this.$refs['ModeModal'].resetFields();
-        this.ModeModal.data = {
-          status: 1,
-          title: '',
-          content: ''
-        };
-        this.ModeModal.isEdit = false;
-        this.ModeModal.modal = true;
-      },
-      ModalCancel(){
-        this.ModeModal.modal = false;
-      },
-      AddOver(){
-        this.$refs['ModeModal'].validate(valid=>{
-          if(valid){
-            this.ModeModal.modal = false;
-            let ninfo = this.RemoveObserve(this.ModeModal.data);
-            const isEdit = this.ModeModal.isEdit;
-            const url = isEdit?'Autopush/modelUp':'Autopush/modelAdd';
-            if(isEdit){
-              ninfo.id = this.ModeModal.id;
-            }
-            this.UploadData(url,ninfo).then(()=>{
-              this.InitData(this.apiUrl);
-            });
-          }
-        });
-      },
-      //修改模板
-      EditOpt(row){
-        let status_num = 0;
-        this.TextArr.status.forEach((val, index)=>{
-          if(row.status === val){
-            status_num = index
-          }
-        })
-        this.ModeModal.data = {
-          title: row.title,
-          content: row.content,
-          status: status_num
-        };
-        this.ModeModal.isEdit = true;
-        this.ModeModal.id = row.id;
-        this.ModeModal.modal = true;
-      },
-      //删除模版
-      Delopt(row){
-        this.$Modal.confirm({
-          title: '提示',
-          content: `<p class="confirm-text">删除此模板？</p>`,
-          onOk: ()=>{
-            this.UploadData('Autopush/modelDel',{id: row.id}).then(()=>{
-              this.InitData(this.apiUrl);
-            });
-          }
-        })
+      DrawChart(){
+        let PieChart1 = this.$echarts.init(document.getElementById('pieChart1'));
+        let PieChart2 = this.$echarts.init(document.getElementById('pieChart2'));
+        let BarChart = this.$echarts.init(document.getElementById('BarChart'));
+        PieChart1.setOption(this.PieOption1);
+        PieChart2.setOption(this.PieOption2);
+        BarChart.setOption(this.BarOption);
       }
     }
   }
@@ -242,38 +283,58 @@
 
 
 <style lang="less" scoped>
-  .list-title{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+  .card-title{
+    color: rgba(0, 0, 0, 0.45);
     font-weight: normal;
-    padding-bottom: 10px;
+    font-size: 16px;
+    line-height: 22px;
   }
-  .data-area{
-    padding-top: 20px;
-    .ivu-table-wrapper{
-      border: none;
-    }
-    .page-box{
-      padding: 20px;
+  .card-number{
+    text-overflow: ellipsis;
+    word-break: break-all;
+    white-space: nowrap;
+    color: rgba(0, 0, 0, 0.85);
+    margin-top: 4px;
+    margin-bottom: 0;
+    font-size: 32px;
+    line-height: 38px;
+    height: 38px;
+  }
+  .card-content{
+    margin-bottom: 12px;
+    position: relative;
+    width: 100%;
+    height: 42px;
+    .info-txt{
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 50%;
       display: flex;
-      flex-direction: row-reverse;
+      flex-direction: row;
+      .value{
+        margin-left:8px;
+      }
     }
   }
-  .card-tit{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+  .card-footer{
+    border-top: 1px solid #e8e8e8;
+    padding-top: 9px;
+    margin-top: 8px;
+    color: rgba(0, 0, 0, 0.65);
+    .value{
+      margin-left: 8px;
+      color: rgba(0, 0, 0, 0.85);
+    }
   }
-  .col-center{
-    text-align: center;
+  .pie-box{
+    margin-top: 10px;
   }
-  .auto-height{
-    max-height: 400px;
-    overflow-y: auto;
-    overflow-x: hidden;
+  .chart-tit{
+    width: 100%;
+    font-size: 18px;
   }
-  .info-width{
-    width: 200px;
+  .chart-out{
+    display: inline-block;
   }
 </style>

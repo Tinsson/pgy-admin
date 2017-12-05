@@ -85,6 +85,11 @@
         <Button type="primary" @click="EditOver" size="large">修改</Button>
       </div>
     </Modal>
+    <AuditModal :modalShow="Audit.modal"
+                :InitId="Audit.id"
+                :UniqueId="Audit.id"
+                :AllId="Audit.allId"
+                @CloseModal="AuditCancel"></AuditModal>
   </div>
 </template>
 
@@ -92,11 +97,13 @@
   import { getLocal } from '@/util/util'
   import { phoneCheck } from '@/util/valid'
   import GroupSms from '@/components/groupModal/GroupSms'
+  import AuditModal from '@/components/infoModal/AuditModal'
 
   export default {
     name: 'BlackList',
     components:{
-      GroupSms
+      GroupSms,
+      AuditModal
     },
     data () {
       return {
@@ -192,6 +199,12 @@
           count: 0,
           cur: 1,
           size: 20,
+        },
+        //审核面板
+        Audit:{
+          modal: false,
+          id: '',
+          allId: ''
         }
       }
     },
@@ -204,39 +217,19 @@
       RenderBtn(h,params,bdata){
         let res = [];
         bdata.forEach((val)=>{
-          let btn = '';
-          if(val.class === 'DetailsOpt'){
-            let innerbtn = h('Button',{
-              props: {
-                type: val.color
-              },
-              style: {
-                marginRight: '5px'
+          const btn = h('Button',{
+            props: {
+              type: val.color
+            },
+            style: {
+              marginRight: '5px'
+            },
+            on: {
+              click: ()=>{
+                this[val.class](params.row)
               }
-            },val.name);
-            btn = h('router-link',{
-              props: {
-                to: '/consumerDetails?id=' + params.row.id
-              },
-              attrs: {
-                target: '_blank'
-              }
-            },[innerbtn]);
-          }else{
-            btn = h('Button',{
-              props: {
-                type: val.color
-              },
-              style: {
-                marginRight: '5px'
-              },
-              on: {
-                click: ()=>{
-                  this[val.class](params.row)
-                }
-              },
-            },val.name);
-          }
+            },
+          },val.name);
           res.push(btn);
         });
         return res;
@@ -325,6 +318,19 @@
             this.$Message.error('服务器繁忙，请稍后再试！');
           })
         })
+      },
+      //审核面板
+      DetailsOpt(row){
+        this.Audit.modal = true;
+        this.Audit.id = row.id;
+        let idArr = [];
+        this.RowUserData.forEach(val=>{
+          idArr.push(val.id);
+        });
+        this.Audit.allId = idArr;
+      },
+      AuditCancel(){
+        this.Audit.modal = false;
       },
       //编辑操作
       EditOpt(row){

@@ -11,9 +11,6 @@ import NotFind from '@/components/NotFind'
 //登录模块
 import Login from '@/views/login/Login'
 
-//首页模块
-import Index from '@/views/home/Index'
-
 //权限模块
 import listRole from '@/views/auth/listRole'
 import listUser from '@/views/auth/listUser'
@@ -66,11 +63,16 @@ import commissionFormula from '@/views/config/commissionFormula'
 //推广管理
 import generalizeConfig from '@/views/generalize/generalizeConfig'
 import generalizeList from '@/views/generalize/generalizeList'
+import Extend from '@/views/generalize/Extend'
 
 //第三方管理
 import cajlList from '@/views/third/cajlList'
 
-//整合所有的模块集合，用于添加路由
+//统计
+import statistiIndex from '@/views/statistical/statistiIndex'
+import statiTrading from '@/views/statistical/statiTrading'
+
+//整合所有的模块集合，用于动态路由
 const componentList = {
   AdminFrame,
   listRole,
@@ -110,7 +112,10 @@ const componentList = {
   generalizeConfig,
   generalizeList,
 
-  cajlList
+  cajlList,
+
+  statistiIndex,
+  statiTrading
 };
 Vue.use(Router);
 
@@ -170,6 +175,10 @@ const routes = [
     path: '/contractInfo',
     name: '合同详细信息',
     component: contractInfo
+  },{
+    path: '/extend',
+    name: '推广H5页面',
+    component: Extend
   },{
     path: '/notfind',
     name: '页面不存在',
