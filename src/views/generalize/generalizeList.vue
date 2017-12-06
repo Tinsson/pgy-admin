@@ -72,6 +72,7 @@
 
 <script>
   import { getLocal } from '@/util/util'
+  import Clipboard from 'clipboard';
 
   export default {
     name: 'GeneralizeList',
@@ -81,6 +82,7 @@
         apiUrl: 'Promote/index',
         auth_id: '',
         loading: true,
+        ClipBoard: {},
         allTime: [],
         //统计数据
         CountData: [{
@@ -151,10 +153,24 @@
             align: 'center',
             key: 'title'
           },{
-            title: '链接',
-            width: '150',
+            title: '推广链接',
             align: 'center',
-            key: 'url'
+            key: 'url',
+            render: (h, params)=>{
+              const Url = window.location.origin + window.location.pathname + '#/extend?code=' + params.row.codebase;
+              return h('div',{
+                'class': {
+                  clipBtn : true
+                },
+                style:{
+                  cursor: 'pointer',
+                  color: '#d73435'
+                },
+                attrs:{
+                  src: Url
+                }
+              },'复制链接')
+            }
           },{
             title: '浏览数',
             key: 'viewcount'
@@ -184,6 +200,20 @@
     created(){
       this.auth_id = getLocal('auth_id');
       this.InitData(this.apiUrl);
+    },
+    mounted(){
+      //剪切板功能
+      this.ClipBoard = new Clipboard('.clipBtn',{
+        text: function(elm){
+          return elm.getAttribute('src');
+        }
+      });
+      this.ClipBoard.on('success',(e)=>{
+        this.$Message.success('链接粘贴成功！');
+      })
+    },
+    destroyed() {
+      this.ClipBoard.destroy();
     },
     methods: {
       //去除data数据里绑定的监视器
@@ -298,7 +328,7 @@
       ExportData(){
         let sinfo = this.RemoveObserve(this.ScreenData);
         sinfo.expro = 1;
-        this.UploadData('Collection/CollectionList',sinfo).then((url)=>{
+        this.UploadData('Promote/detail',sinfo).then((url)=>{
           //console.log(url);
           window.location.href = url;
         });
@@ -309,7 +339,7 @@
           page: curpage,
           num: this.Page.size
         });
-        this.InitData('Collection/collectionListInfo',sinfo).then(()=>{
+        this.InitData('Promote/detail',sinfo).then(()=>{
           this.Page.cur = curpage;
         })
       },
@@ -319,7 +349,7 @@
           page: 1,
           num: size
         });
-        this.InitData('Collection/collectionListInfo',sinfo).then(()=>{
+        this.InitData('Promote/detail',sinfo).then(()=>{
           this.Page.cur = 1;
           this.Page.size = size;
         })

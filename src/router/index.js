@@ -64,6 +64,7 @@ import commissionFormula from '@/views/config/commissionFormula'
 import generalizeConfig from '@/views/generalize/generalizeConfig'
 import generalizeList from '@/views/generalize/generalizeList'
 import Extend from '@/views/generalize/Extend'
+import Registered from '@/views/generalize/Registered'
 
 //第三方管理
 import cajlList from '@/views/third/cajlList'
@@ -178,7 +179,17 @@ const routes = [
   },{
     path: '/extend',
     name: '推广H5页面',
-    component: Extend
+    component: Extend,
+    meta:{
+      IsOpen: true
+    }
+  },{
+    path: '/registered',
+    name: '注册完后引导页',
+    component: Registered,
+    meta: {
+      IsOpen: true
+    }
   },{
     path: '/notfind',
     name: '页面不存在',
@@ -192,9 +203,13 @@ const router = new Router({
 
 //这个是请求页面路由的时候会验证token存不存在，不存在的话会到登录页
 router.beforeEach((to, from, next)=>{
+  //推广链接
+  if(to.meta.IsOpen){
+    next();
+    return;
+  }
   const token = getLocal('token');
   if(token){
-
     store.dispatch('setView').then(()=>{
       let permission = JSON.stringify(store.getters.permission);
       let perdep = JSON.parse(permission);

@@ -80,6 +80,23 @@
       this.code = this.$route.query.code;
       this.InitData(this.code);
     },
+    mounted(){
+      const title = '欣荣钱包推广'
+      document.body.style.overflow = 'hidden';
+      document.setTitle = function(t) {
+        document.title = t;
+        var i = document.createElement('iframe');
+        i.style.display = 'none';
+        i.onload = function() {
+          setTimeout(function(){
+            i.remove();
+          }, 9)
+        }
+        document.body.appendChild(i);
+      }
+      document.title = title;
+      document.setTitle(title);
+    },
     methods: {
       //初始化数据
       InitData(code){
@@ -147,7 +164,7 @@
       RegisterBtn(){
         this.$axios.post(this.baseUrl+'/Promote/pReg',qs.stringify(this.SubData)).then((d)=>{
           if(d.data.status === 1){
-
+            this.$router.push('/registered');
           }else{
             alert(d.data.message);
           }
@@ -188,9 +205,9 @@
     }
     .ipt-area{
       width: 100%;
-      height: 45px;
-      line-height: 45px;
-      border-radius: 45px;
+      height: 35px;
+      line-height: 35px;
+      border-radius: 35px;
       background: #FFF;
       display: flex;
       flex-direction: row;
@@ -202,31 +219,31 @@
         width: 40%;
         .button{
           text-align: center;
-          font-size: 16px;
+          font-size: 14px;
           width: 100%;
         }
       }
       .icon{
-        width: 30px;
+        width: 28px;
         text-align: center;
         display: inline-block;
-        font-size: 28px;
+        font-size: 26px;
         margin-left: 10px;
       }
       .ipt-box{
         width: 80%;
         margin-left: 6px;
         margin-top: 5px;
-        font-size: 14px;
-        height: 35px;
-        line-height: 35px;
+        font-size: 12px;
+        height: 25px;
+        line-height: 25px;
         border:none;
         outline: none;
       }
       .sub-btn{
         width: 100%;
         text-align: center;
-        font-size: 16px;
+        font-size: 14px;
       }
     }
   }

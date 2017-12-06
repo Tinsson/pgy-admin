@@ -33,7 +33,7 @@
               </li>
               <li class="res-box">
                 <p class="simple" :class="'type'+AllInfo.jiben.info.taobao.status">{{AllInfo.jiben.info.taobao.info}}</p>
-                <p class="title active">淘宝</p>
+                <p class="title active" @click="ReportTaobao">淘宝</p>
               </li>
               <li class="res-box">
                 <p class="simple" :class="'type'+AllInfo.jiben.info.zhimafen.status">{{AllInfo.jiben.info.zhimafen.info}}</p>
@@ -843,6 +843,12 @@
           }else{
             val.pay_state = 1;
           }
+        })
+      },
+      //淘宝报价
+      ReportTaobao(){
+        this.$fetch('Chart/chartTaobao',{phone: this.EditData.info.phone}).then((d)=>{
+          console.log(d);
         })
       },
       //查看大图
