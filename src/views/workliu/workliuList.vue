@@ -355,6 +355,9 @@
           this.Page.cur = 1;
           this.Page.size = size;
         })
+      },
+      ResetPageNum(){
+        
       }
     }
   }
